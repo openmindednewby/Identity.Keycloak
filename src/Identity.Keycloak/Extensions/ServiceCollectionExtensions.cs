@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OnlineMenu.Identity.Abstractions.Abstractions;
-using OnlineMenu.Identity.Abstractions.Configuration;
+using Identity.Abstractions.Abstractions;
+using Identity.Abstractions.Configuration;
 using Identity.Keycloak.Configuration;
 using Identity.Keycloak.Services;
 

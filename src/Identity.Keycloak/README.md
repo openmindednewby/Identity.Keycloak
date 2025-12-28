@@ -1,6 +1,6 @@
-# OnlineMenu.Identity.Keycloak
+# Identity.Keycloak
 
-Keycloak implementation of the OnlineMenu.Identity.Abstractions package.
+Keycloak implementation of the Identity.Abstractions package.
 
 ## Overview
 
@@ -14,7 +14,7 @@ This package provides a production-ready Keycloak identity provider implementati
 ## Installation
 
 ```bash
-dotnet add package OnlineMenu.Identity.Keycloak
+dotnet add package Identity.Keycloak
 ```
 
 ## Prerequisites
@@ -61,7 +61,7 @@ dotnet add package OnlineMenu.Identity.Keycloak
 ### Register in Dependency Injection
 
 ```csharp
-using OnlineMenu.Identity.Keycloak.Extensions;
+using Identity.Keycloak.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,8 +77,8 @@ var app = builder.Build();
 ### Use in Your Code
 
 ```csharp
-using OnlineMenu.Identity.Abstractions.Abstractions;
-using OnlineMenu.Identity.Abstractions.Models;
+using Identity.Abstractions.Abstractions;
+using Identity.Abstractions.Models;
 
 public class AuthService
 {
@@ -302,7 +302,7 @@ public class TwilioNotificationService : INotificationService
 
 ## Testing
 
-Unit tests are provided in the `OnlineMenu.Identity.Keycloak.Tests` project.
+Unit tests are provided in the `Identity.Keycloak.Tests` project.
 
 ```bash
 dotnet test

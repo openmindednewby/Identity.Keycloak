@@ -1,8 +1,8 @@
 using IdentityModel.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OnlineMenu.Identity.Abstractions.Exceptions;
-using OnlineMenu.Identity.Abstractions.Models;
+using Identity.Abstractions.Exceptions;
+using Identity.Abstractions.Models;
 using Identity.Keycloak.Configuration;
 using System.Net.Http.Json;
 using System.Text.Json;

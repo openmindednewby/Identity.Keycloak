@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>OnlineMenu.Identity.Keycloak</RootNamespace>
-    <PackageId>OnlineMenu.Identity.Keycloak</PackageId>
-    <Description>Keycloak implementation of OnlineMenu identity provider. Supports OIDC/OAuth2 authentication, OTP verification, and user management through Keycloak.</Description>
+    <RootNamespace>Identity.Keycloak</RootNamespace>
+    <PackageId>Identity.Keycloak</PackageId>
+    <Description>Keycloak implementation of identity provider. Supports OIDC/OAuth2 authentication, OTP verification, and user management through Keycloak.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OnlineMenu.Identity.Abstractions\OnlineMenu.Identity.Abstractions.csproj" />
+    <PackageReference Include="Identity.Abstractions" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

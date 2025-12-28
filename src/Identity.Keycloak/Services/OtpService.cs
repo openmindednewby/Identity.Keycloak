@@ -1,4 +1,4 @@
-using OnlineMenu.Identity.Abstractions.Abstractions;
+using Identity.Abstractions.Abstractions;
 using System.Security.Cryptography;
 
 namespace Identity.Keycloak.Services;

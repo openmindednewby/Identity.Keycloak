@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OnlineMenu.Identity.Abstractions.Abstractions;
-using OnlineMenu.Identity.Abstractions.Configuration;
-using OnlineMenu.Identity.Abstractions.Exceptions;
-using OnlineMenu.Identity.Abstractions.Models;
+using Identity.Abstractions.Abstractions;
+using Identity.Abstractions.Configuration;
+using Identity.Abstractions.Exceptions;
+using Identity.Abstractions.Models;
 using Identity.Keycloak.Configuration;
 using Identity.Keycloak.Services;
 

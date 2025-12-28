@@ -4,8 +4,8 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OnlineMenu.Identity.Abstractions.Abstractions;
-using OnlineMenu.Identity.Abstractions.Models;
+using Identity.Abstractions.Abstractions;
+using Identity.Abstractions.Models;
 using Identity.Keycloak.Configuration;
 
 namespace Identity.Keycloak.Services;
