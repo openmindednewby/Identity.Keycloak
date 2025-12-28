@@ -9,8 +9,8 @@
     <!-- Package metadata -->
     <Authors>OnlineMenu Contributors</Authors>
     <Company>OnlineMenu</Company>
-    <PackageProjectUrl>https://github.com/yourusername/Identity.Keycloak</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/yourusername/Identity.Keycloak</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/openmindednewby/Identity.Keycloak</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/openmindednewby/Identity.Keycloak</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -19,9 +19,9 @@
     <Description>Keycloak OpenID Connect authentication provider implementation</Description>
 
     <!-- Versioning -->
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
 
     <!-- NuGet settings -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
