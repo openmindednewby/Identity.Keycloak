@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OnlineMenu.Identity.Abstractions.Abstractions;
 using OnlineMenu.Identity.Abstractions.Models;
-using OnlineMenu.Identity.Keycloak.Configuration;
+using Identity.Keycloak.Configuration;
 
-namespace OnlineMenu.Identity.Keycloak.Services;
+namespace Identity.Keycloak.Services;
 
 /// <summary>
 /// Keycloak implementation of user management service using Admin REST API

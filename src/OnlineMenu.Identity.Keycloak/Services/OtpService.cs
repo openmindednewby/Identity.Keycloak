@@ -1,7 +1,7 @@
 using OnlineMenu.Identity.Abstractions.Abstractions;
 using System.Security.Cryptography;
 
-namespace OnlineMenu.Identity.Keycloak.Services;
+namespace Identity.Keycloak.Services;
 
 /// <summary>
 /// OTP generation and validation service

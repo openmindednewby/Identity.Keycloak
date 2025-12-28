@@ -4,10 +4,10 @@ using OnlineMenu.Identity.Abstractions.Abstractions;
 using OnlineMenu.Identity.Abstractions.Configuration;
 using OnlineMenu.Identity.Abstractions.Exceptions;
 using OnlineMenu.Identity.Abstractions.Models;
-using OnlineMenu.Identity.Keycloak.Configuration;
-using OnlineMenu.Identity.Keycloak.Services;
+using Identity.Keycloak.Configuration;
+using Identity.Keycloak.Services;
 
-namespace OnlineMenu.Identity.Keycloak;
+namespace Identity.Keycloak;
 
 /// <summary>
 /// Keycloak implementation of IIdentityProvider

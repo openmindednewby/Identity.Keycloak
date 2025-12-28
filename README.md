@@ -1,6 +1,6 @@
-# OnlineMenu.Identity.Keycloak
+# Identity.Keycloak
 
-[![NuGet](https://img.shields.io/nuget/v/OnlineMenu.Identity.Keycloak.svg)](https://www.nuget.org/packages/OnlineMenu.Identity.Keycloak)
+[![NuGet](https://img.shields.io/nuget/v/Identity.Keycloak.svg)](https://www.nuget.org/packages/Identity.Keycloak)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Keycloak OpenID Connect authentication provider implementation
@@ -8,7 +8,7 @@ Keycloak OpenID Connect authentication provider implementation
 ## Installation
 
 ```bash
-dotnet add package OnlineMenu.Identity.Keycloak
+dotnet add package Identity.Keycloak
 ```
 
 ## Description
@@ -17,7 +17,7 @@ Keycloak OpenID Connect authentication provider implementation
 
 ## Documentation
 
-See the [NuGet package page](https://www.nuget.org/packages/OnlineMenu.Identity.Keycloak) for full documentation.
+See the [NuGet package page](https://www.nuget.org/packages/Identity.Keycloak) for full documentation.
 
 ## Contributing
 
@@ -35,5 +35,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/yourusername/OnlineMenu.Identity.Keycloak/issues)
-- Discussions: [GitHub Discussions](https://github.com/yourusername/OnlineMenu.Identity.Keycloak/discussions)
+- Issues: [GitHub Issues](https://github.com/yourusername/Identity.Keycloak/issues)
+- Discussions: [GitHub Discussions](https://github.com/yourusername/Identity.Keycloak/discussions)

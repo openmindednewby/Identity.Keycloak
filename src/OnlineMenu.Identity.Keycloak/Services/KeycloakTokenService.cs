@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OnlineMenu.Identity.Abstractions.Exceptions;
 using OnlineMenu.Identity.Abstractions.Models;
-using OnlineMenu.Identity.Keycloak.Configuration;
+using Identity.Keycloak.Configuration;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace OnlineMenu.Identity.Keycloak.Services;
+namespace Identity.Keycloak.Services;
 
 /// <summary>
 /// Service for Keycloak token operations

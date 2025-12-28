@@ -9,8 +9,8 @@
     <!-- Package metadata -->
     <Authors>OnlineMenu Contributors</Authors>
     <Company>OnlineMenu</Company>
-    <PackageProjectUrl>https://github.com/yourusername/OnlineMenu.Identity.Keycloak</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/yourusername/OnlineMenu.Identity.Keycloak</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/yourusername/Identity.Keycloak</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/yourusername/Identity.Keycloak</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>

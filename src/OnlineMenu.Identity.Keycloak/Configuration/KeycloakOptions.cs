@@ -1,4 +1,4 @@
-namespace OnlineMenu.Identity.Keycloak.Configuration;
+namespace Identity.Keycloak.Configuration;
 
 /// <summary>
 /// Configuration options for Keycloak identity provider

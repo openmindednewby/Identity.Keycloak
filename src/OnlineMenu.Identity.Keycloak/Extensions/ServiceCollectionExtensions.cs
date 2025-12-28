@@ -2,10 +2,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnlineMenu.Identity.Abstractions.Abstractions;
 using OnlineMenu.Identity.Abstractions.Configuration;
-using OnlineMenu.Identity.Keycloak.Configuration;
-using OnlineMenu.Identity.Keycloak.Services;
+using Identity.Keycloak.Configuration;
+using Identity.Keycloak.Services;
 
-namespace OnlineMenu.Identity.Keycloak.Extensions;
+namespace Identity.Keycloak.Extensions;
 
 /// <summary>
 /// Extension methods for registering Keycloak identity provider services
