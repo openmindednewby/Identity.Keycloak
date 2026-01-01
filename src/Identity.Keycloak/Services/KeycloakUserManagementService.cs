@@ -127,6 +127,19 @@ public class KeycloakUserManagementService : IUserManagementService
             var token = await GetAdminTokenAsync(cancellationToken);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+            // Build attributes dictionary conditionally
+            var attributes = new Dictionary<string, string[]>();
+
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+            {
+                attributes["phoneNumber"] = new[] { request.PhoneNumber };
+            }
+
+            if (request.TenantId.HasValue)
+            {
+                attributes["tenantId"] = new[] { request.TenantId.Value.ToString() };
+            }
+
             var keycloakUser = new
             {
                 username = request.Username,
@@ -134,11 +147,7 @@ public class KeycloakUserManagementService : IUserManagementService
                 firstName = request.FirstName,
                 lastName = request.LastName,
                 enabled = request.Enabled,
-                attributes = new Dictionary<string, string[]>
-                {
-                    ["phoneNumber"] = new[] { request.PhoneNumber ?? string.Empty },
-                    ["tenantId"] = request.TenantId.HasValue ? new[] { request.TenantId.Value.ToString() } : Array.Empty<string>()
-                },
+                attributes = attributes.Count > 0 ? attributes : null,
                 credentials = !string.IsNullOrEmpty(request.Password) ? new[]
                 {
                     new
@@ -152,7 +161,14 @@ public class KeycloakUserManagementService : IUserManagementService
 
             var url = GetAdminApiUrl("users");
             var response = await _httpClient.PostAsJsonAsync(url, keycloakUser, cancellationToken);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("Failed to create user in Keycloak. Status: {Status}, Response: {Response}",
+                    response.StatusCode, errorContent);
+                throw new HttpRequestException($"Failed to create user in Keycloak. Status: {response.StatusCode}, Error: {errorContent}");
+            }
 
             // Get created user ID from Location header
             var location = response.Headers.Location?.ToString();
