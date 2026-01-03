@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet("minor", "major")]
+  [ValidateSet("patch", "minor", "major")]
   [string]$Bump,
 
   [Parameter(Mandatory = $true)]
@@ -26,7 +26,7 @@ function Get-VersionFromPropsFile {
 function Get-BumpedVersion {
   param(
     [Parameter(Mandatory = $true)][string]$CurrentVersion,
-    [Parameter(Mandatory = $true)][ValidateSet("minor", "major")][string]$Bump
+    [Parameter(Mandatory = $true)][ValidateSet("patch", "minor", "major")][string]$Bump
   )
 
   if ($CurrentVersion -notmatch "^(\d+)\.(\d+)\.(\d+)$") {
@@ -38,6 +38,9 @@ function Get-BumpedVersion {
   $patch = [int]$Matches[3]
 
   switch ($Bump) {
+    "patch" {
+      $patch++
+    }
     "minor" {
       $minor++
       $patch = 0
