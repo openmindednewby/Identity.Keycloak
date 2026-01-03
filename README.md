@@ -29,11 +29,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Related Packages
 
-- [OnlineMenu.DomainCore](https://www.nuget.org/packages/OnlineMenu.DomainCore)
-- [OnlineMenu.Security](https://www.nuget.org/packages/OnlineMenu.Security)
-- [OnlineMenu.MultiTenancy.EntityFrameworkCore](https://www.nuget.org/packages/OnlineMenu.MultiTenancy.EntityFrameworkCore)
+- [Identity.Abstractions](https://www.nuget.org/packages/Identity.Abstractions)
 
 ## Support
 
 - Issues: [GitHub Issues](https://github.com/yourusername/Identity.Keycloak/issues)
 - Discussions: [GitHub Discussions](https://github.com/yourusername/Identity.Keycloak/discussions)
+
+## How to Publish
+
+```bash
+cd C:\desktopContents\projects\SaaS\NuGetPackages\Identity.Keycloak
+.\publish.ps1 -ApiKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -Bump major
+.\publish.ps1 -ApiKey XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -Bump minor
+```
