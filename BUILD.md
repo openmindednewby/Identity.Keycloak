@@ -13,7 +13,7 @@ This guide explains how to build, pack, and publish this NuGet package.
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Identity.Keycloak.git
+git clone https://github.com/openmindednewby/Identity.Keycloak.git
 cd Identity.Keycloak
 ```
 
@@ -276,8 +276,8 @@ Make sure symbols are enabled in `Directory.Build.props`:
 
 ## 💬 Support
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/Identity.Keycloak/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/Identity.Keycloak/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/openmindednewby/Identity.Keycloak/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/openmindednewby/Identity.Keycloak/discussions)
 - 📦 **NuGet**: [NuGet Package Page](https://www.nuget.org/packages/Identity.Keycloak)
 
 ---

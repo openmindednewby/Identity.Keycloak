@@ -7,7 +7,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
     <!-- Package metadata -->
-    <Authors>OnlineMenu Contributors</Authors>
+    <Authors>DLoizides</Authors>
     <Company>OnlineMenu</Company>
     <PackageProjectUrl>https://github.com/openmindednewby/Identity.Keycloak</PackageProjectUrl>
     <RepositoryUrl>https://github.com/openmindednewby/Identity.Keycloak</RepositoryUrl>
