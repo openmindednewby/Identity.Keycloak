@@ -312,14 +312,104 @@ public class KeycloakUserManagementService : IUserManagementService
         }
     }
 
+    public async Task<bool> UpdateUserProfileAsync(string userId, string? firstName, string? lastName, string? email, string? phoneNumber, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var token = await GetAdminTokenAsync(cancellationToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var url = GetAdminApiUrl($"users/{userId}");
+
+            var attributes = new Dictionary<string, string[]>();
+            if (phoneNumber != null)
+            {
+                attributes["phoneNumber"] = new[] { phoneNumber };
+            }
+
+            var update = new
+            {
+                firstName,
+                lastName,
+                email,
+                attributes = attributes.Count > 0 ? attributes : null
+            };
+
+            var response = await _httpClient.PutAsJsonAsync(url, update, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update profile for user {UserId}", userId);
+            return false;
+        }
+    }
+
+    public async Task<List<UserSession>> GetUserSessionsAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var token = await GetAdminTokenAsync(cancellationToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var url = GetAdminApiUrl($"users/{userId}/sessions");
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var sessions = await response.Content.ReadFromJsonAsync<List<KeycloakSession>>(cancellationToken);
+            return sessions?.Select(s => new UserSession
+            {
+                Id = s.Id,
+                IpAddress = s.IpAddress,
+                Start = s.Start,
+                LastAccess = s.LastAccess,
+                Clients = s.Clients?.Values.ToList() ?? new List<string>()
+            }).ToList() ?? new List<UserSession>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get sessions for user {UserId}", userId);
+            return new List<UserSession>();
+        }
+    }
+
+    public async Task<bool> RevokeSessionAsync(string userId, string sessionId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Verify session belongs to this user before revoking
+            var sessions = await GetUserSessionsAsync(userId, cancellationToken);
+            if (!sessions.Any(s => s.Id == sessionId))
+            {
+                _logger.LogWarning("Session {SessionId} does not belong to user {UserId}", sessionId, userId);
+                return false;
+            }
+
+            var token = await GetAdminTokenAsync(cancellationToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var url = GetAdminApiUrl($"sessions/{sessionId}");
+            var response = await _httpClient.DeleteAsync(url, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to revoke session {SessionId} for user {UserId}", sessionId, userId);
+            return false;
+        }
+    }
+
     private static UserListItem MapToUserListItem(KeycloakUser user)
     {
         // Extract tenantId from Keycloak attributes
         string? tenantId = null;
         if (user.Attributes?.TryGetValue("tenantId", out var tenantIdValues) == true && tenantIdValues?.Length > 0)
-        {
             tenantId = tenantIdValues[0];
-        }
+
+        // Extract phoneNumber from Keycloak attributes
+        string? phoneNumber = null;
+        if (user.Attributes?.TryGetValue("phoneNumber", out var phoneValues) == true && phoneValues?.Length > 0)
+            phoneNumber = phoneValues[0];
 
         return new UserListItem
         {
@@ -332,6 +422,7 @@ public class KeycloakUserManagementService : IUserManagementService
             CreatedTimestamp = user.CreatedTimestamp.HasValue
                 ? DateTimeOffset.FromUnixTimeMilliseconds(user.CreatedTimestamp.Value).DateTime
                 : null,
+            PhoneNumber = phoneNumber,
             Roles = new List<string>(), // Roles would need separate call to fetch
             TenantId = tenantId
         };
@@ -354,5 +445,14 @@ public class KeycloakUserManagementService : IUserManagementService
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+    }
+
+    private class KeycloakSession
+    {
+        public string Id { get; set; } = string.Empty;
+        public string? IpAddress { get; set; }
+        public long Start { get; set; }
+        public long LastAccess { get; set; }
+        public Dictionary<string, string>? Clients { get; set; }
     }
 }

@@ -246,6 +246,31 @@ public class KeycloakIdentityProvider : IIdentityProvider
   }
 
   /// <summary>
+  /// Validate user credentials without generating tokens.
+  /// Used for self-service password change verification.
+  /// </summary>
+  public async Task<bool> ValidateCredentialsAsync(
+    string username,
+    string password,
+    CancellationToken cancellationToken = default)
+  {
+    try
+    {
+      await _tokenService.AuthenticateWithPasswordAsync(username, password, cancellationToken);
+      return true;
+    }
+    catch (InvalidCredentialsException)
+    {
+      return false;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Unexpected error validating credentials for {Username}", username);
+      throw;
+    }
+  }
+
+  /// <summary>
   /// Authenticate with username and password (ROPC/Direct Grant)
   /// </summary>
   private async Task<AuthenticationResult> AuthenticateWithPasswordAsync(
