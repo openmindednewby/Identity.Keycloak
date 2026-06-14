@@ -6,14 +6,24 @@
     <Description>Keycloak implementation of identity provider. Supports OIDC/OAuth2 authentication, OTP verification, and user management through Keycloak.</Description>
   </PropertyGroup>
 
+  <!-- AspNetCore shared framework: IServiceCollection / IConfiguration / ILogger
+       extension surfaces for the Keycloak HTTP + claims helpers. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Identity.Abstractions" Version="1.6.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- JwtBearerOptions/Events + TokenValidatedContext for the multi-realm
+         auth helpers; pulls Microsoft.IdentityModel.Protocols.OpenIdConnect
+         (ConfigurationManager / OpenIdConnectConfiguration) transitively. -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
     <PackageReference Include="IdentityModel.OidcClient" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
   </ItemGroup>
 
 </Project>
