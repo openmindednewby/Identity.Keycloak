@@ -14,6 +14,9 @@
 
   <ItemGroup>
     <PackageReference Include="Identity.Abstractions" Version="1.6.2" />
+    <!-- GetRealm() + IsSuperUser() / OnlineMenuRoles for the cross-realm wall
+         + superuser handlers (Identity.Keycloak.Authorization). -->
+    <PackageReference Include="Security.Claims" Version="1.5.1" />
   </ItemGroup>
 
   <ItemGroup>
