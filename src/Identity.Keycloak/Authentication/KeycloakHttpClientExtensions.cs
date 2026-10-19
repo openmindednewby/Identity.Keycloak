@@ -62,6 +62,10 @@ public static class KeycloakHttpClientExtensions
     /// the typed Keycloak clients, suitable for the JwtBearer backchannel's
     /// <c>HttpDocumentRetriever</c> (OIDC discovery + JWKS fetch).
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Dloizides.Patterns",
+        "DLZ0006",
+        Justification = "One boot-time client for JwtBearerOptions.Backchannel, built before the DI container exists; public API used by zygos Finreg.Web Program.cs")]
     public static HttpClient CreateBackchannelHttpClient(IConfiguration configuration)
     {
         var options = ReadKeycloakHttpOptions(configuration);
