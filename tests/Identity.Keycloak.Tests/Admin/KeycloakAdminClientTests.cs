@@ -9,7 +9,14 @@ public class KeycloakAdminClientTests
     [Fact]
     public async Task GetAdminTokenAsync_WithClientSecret_PostsClientCredentialsToConfiguredRealm()
     {
-        var (client, handler) = AdminClientFactory.Create("https://kc.test", "admin-token", _ => new HttpResponseMessage(HttpStatusCode.OK));
+        var options = new KeycloakAdminClientOptions
+        {
+            ServerUrl = "https://kc.test",
+            ClientCredentialsRealm = "kefi",
+            AdminClientId = "kefi-admin-cli",
+            AdminClientSecret = "secret",
+        };
+        var (client, handler) = AdminClientFactory.Create(options, "admin-token", _ => new HttpResponseMessage(HttpStatusCode.OK));
 
         var token = await client.GetAdminTokenAsync();
 

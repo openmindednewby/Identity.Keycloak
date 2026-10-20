@@ -7,6 +7,17 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.10.1] - 2026-10-21
+
+### Fixed
+- `KeycloakAdminClient` (EXTRACT-CS-KCADMIN-1 "Add a Keycloak admin REST client to Identity.Keycloak" review fixes): a realm or
+  user id that is empty, `.`, `..` or contains `/` or `\` now returns `BadRequest` (no status code) without sending any request;
+  before, `..` collapsed `DELETE users/..` onto the realm URL.
+- Missing admin credentials now return `UpstreamError` from every typed call instead of throwing `InvalidOperationException`.
+- `CreateUserAsync` no longer writes derived first/last names into the caller's `KeycloakUserRepresentation`.
+- `AddKeycloakAdminClient` validates that `KeycloakAdmin:ServerUrl`, `KeycloakAdmin:Authority` or `Keycloak:Authority` resolves to an
+  absolute http(s) URL (`ValidateOnStart`), so a missing server URL fails at startup, not on the first admin call.
+
 ## [1.10.0] - 2026-10-21
 
 ### Added

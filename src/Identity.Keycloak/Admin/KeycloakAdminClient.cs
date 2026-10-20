@@ -10,6 +10,7 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
 {
     private const string AccessTokenField = "access_token";
     private const string RealmRolesPath = "roles";
+    private const string UnsafePathSegmentMessage = "Realm and user id must be non-empty and must not be '.', '..' or contain a path separator.";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -56,42 +57,41 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
     }
 
     public async Task<KeycloakAdminResult<IReadOnlyList<KeycloakUserRepresentation>>> ListUsersAsync(string realm, KeycloakUserQuery query, CancellationToken cancellationToken = default) =>
-        AsReadOnly(await ExecuteValueAsync(token => ReadAsync<List<KeycloakUserRepresentation>>(token, realm, "users" + query.ToQueryString(), cancellationToken), cancellationToken));
+        AsReadOnly(await ExecuteValueAsync(token => ReadAsync<List<KeycloakUserRepresentation>>(token, realm, "users" + query.ToQueryString(), cancellationToken), cancellationToken, realm));
 
     public Task<KeycloakAdminResult<KeycloakUserRepresentation>> GetUserAsync(string realm, string userId, CancellationToken cancellationToken = default) =>
-        ExecuteValueAsync(token => ReadAsync<KeycloakUserRepresentation>(token, realm, UserPath(userId), cancellationToken), cancellationToken);
+        ExecuteValueAsync(token => ReadAsync<KeycloakUserRepresentation>(token, realm, UserPath(userId), cancellationToken), cancellationToken, realm, userId);
 
     public Task<KeycloakAdminResult<string>> CreateUserAsync(string realm, KeycloakUserRepresentation user, CancellationToken cancellationToken = default) =>
-        ExecuteValueAsync(token => PostUserAsync(token, realm, user, cancellationToken), cancellationToken);
+        ExecuteValueAsync(token => PostUserAsync(token, realm, user, cancellationToken), cancellationToken, realm);
 
     public Task<KeycloakAdminResult> UpdateUserAsync(string realm, string userId, KeycloakUserRepresentation user, CancellationToken cancellationToken = default) =>
-        WriteAsync(HttpMethod.Put, realm, UserPath(userId), user, cancellationToken);
+        WriteAsync(HttpMethod.Put, realm, UserPath(userId), user, cancellationToken, userId);
 
     public Task<KeycloakAdminResult> DeleteUserAsync(string realm, string userId, CancellationToken cancellationToken = default) =>
-        WriteAsync(HttpMethod.Delete, realm, UserPath(userId), null, cancellationToken);
+        WriteAsync(HttpMethod.Delete, realm, UserPath(userId), null, cancellationToken, userId);
 
     public Task<KeycloakAdminResult> ResetPasswordAsync(string realm, string userId, KeycloakCredentialRepresentation credential, CancellationToken cancellationToken = default) =>
-        WriteAsync(HttpMethod.Put, realm, $"{UserPath(userId)}/reset-password", credential, cancellationToken);
+        WriteAsync(HttpMethod.Put, realm, $"{UserPath(userId)}/reset-password", credential, cancellationToken, userId);
 
     public Task<KeycloakAdminResult> LogoutUserAsync(string realm, string userId, CancellationToken cancellationToken = default) =>
-        WriteAsync(HttpMethod.Post, realm, $"{UserPath(userId)}/logout", null, cancellationToken);
+        WriteAsync(HttpMethod.Post, realm, $"{UserPath(userId)}/logout", null, cancellationToken, userId);
 
     public async Task<KeycloakAdminResult<IReadOnlyList<KeycloakRoleRepresentation>>> ListRealmRolesAsync(string realm, CancellationToken cancellationToken = default) =>
-        AsReadOnly(await ExecuteValueAsync(token => ReadAsync<List<KeycloakRoleRepresentation>>(token, realm, RealmRolesPath, cancellationToken), cancellationToken));
+        AsReadOnly(await ExecuteValueAsync(token => ReadAsync<List<KeycloakRoleRepresentation>>(token, realm, RealmRolesPath, cancellationToken), cancellationToken, realm));
 
     public async Task<KeycloakAdminResult<IReadOnlyList<KeycloakRoleRepresentation>>> GetUserRealmRolesAsync(string realm, string userId, CancellationToken cancellationToken = default) =>
-        AsReadOnly(await ExecuteValueAsync(token => ReadAsync<List<KeycloakRoleRepresentation>>(token, realm, RoleMappingsPath(userId), cancellationToken), cancellationToken));
+        AsReadOnly(await ExecuteValueAsync(token => ReadAsync<List<KeycloakRoleRepresentation>>(token, realm, RoleMappingsPath(userId), cancellationToken), cancellationToken, realm, userId));
 
     public Task<KeycloakAdminResult> AddUserRealmRolesAsync(string realm, string userId, IEnumerable<string> roleNames, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(token => ChangeRoleMappingsAsync(token, HttpMethod.Post, realm, userId, RealmRolesPath, roleNames, cancellationToken), cancellationToken);
+        ExecuteAsync(token => ChangeRoleMappingsAsync(token, HttpMethod.Post, realm, userId, RealmRolesPath, roleNames, cancellationToken), cancellationToken, realm, userId);
 
     public Task<KeycloakAdminResult> RemoveUserRealmRolesAsync(string realm, string userId, IEnumerable<string> roleNames, CancellationToken cancellationToken = default) =>
-        ExecuteAsync(token => ChangeRoleMappingsAsync(token, HttpMethod.Delete, realm, userId, RoleMappingsPath(userId), roleNames, cancellationToken), cancellationToken);
+        ExecuteAsync(token => ChangeRoleMappingsAsync(token, HttpMethod.Delete, realm, userId, RoleMappingsPath(userId), roleNames, cancellationToken), cancellationToken, realm, userId);
 
     private async Task<KeycloakAdminResult<string>> PostUserAsync(string token, string realm, KeycloakUserRepresentation user, CancellationToken cancellationToken)
     {
-        FillMissingProfileNames(user);
-        using var response = await SendWithTokenAsync(token, HttpMethod.Post, realm, "users", JsonContent.Create(user, options: JsonOptions), cancellationToken);
+        using var response = await SendWithTokenAsync(token, HttpMethod.Post, realm, "users", JsonContent.Create(WithProfileNames(user), options: JsonOptions), cancellationToken);
         if (!response.IsSuccessStatusCode)
             return await FailureAsync<string>(response, cancellationToken);
 
@@ -123,8 +123,8 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
         return await SendAndMapAsync(token, method, realm, RoleMappingsPath(userId), selected, cancellationToken);
     }
 
-    private Task<KeycloakAdminResult> WriteAsync(HttpMethod method, string realm, string path, object? body, CancellationToken cancellationToken) =>
-        ExecuteAsync(token => SendAndMapAsync(token, method, realm, path, body, cancellationToken), cancellationToken);
+    private Task<KeycloakAdminResult> WriteAsync(HttpMethod method, string realm, string path, object? body, CancellationToken cancellationToken, string userId) =>
+        ExecuteAsync(token => SendAndMapAsync(token, method, realm, path, body, cancellationToken), cancellationToken, realm, userId);
 
     private async Task<KeycloakAdminResult> SendAndMapAsync(string token, HttpMethod method, string realm, string path, object? body, CancellationToken cancellationToken)
     {
@@ -155,8 +155,10 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
         return await _httpClient.SendAsync(request, cancellationToken);
     }
 
-    private async Task<KeycloakAdminResult<T>> ExecuteValueAsync<T>(Func<string, Task<KeycloakAdminResult<T>>> call, CancellationToken cancellationToken)
+    private async Task<KeycloakAdminResult<T>> ExecuteValueAsync<T>(Func<string, Task<KeycloakAdminResult<T>>> call, CancellationToken cancellationToken, params string[] pathSegments)
     {
+        if (!KeycloakAdminPathSegment.AreSafe(pathSegments))
+            return KeycloakAdminResult<T>.Failure(KeycloakAdminOutcome.BadRequest, null, UnsafePathSegmentMessage);
         try
         {
             return await call(await GetAdminTokenAsync(cancellationToken));
@@ -169,10 +171,16 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
         {
             return KeycloakAdminResult<T>.Failure(KeycloakAdminOutcome.UpstreamError, null, ex.Message);
         }
+        catch (InvalidOperationException ex)
+        {
+            return KeycloakAdminResult<T>.Failure(KeycloakAdminOutcome.UpstreamError, null, ex.Message);
+        }
     }
 
-    private async Task<KeycloakAdminResult> ExecuteAsync(Func<string, Task<KeycloakAdminResult>> call, CancellationToken cancellationToken)
+    private async Task<KeycloakAdminResult> ExecuteAsync(Func<string, Task<KeycloakAdminResult>> call, CancellationToken cancellationToken, params string[] pathSegments)
     {
+        if (!KeycloakAdminPathSegment.AreSafe(pathSegments))
+            return KeycloakAdminResult.Failure(KeycloakAdminOutcome.BadRequest, null, UnsafePathSegmentMessage);
         try
         {
             return await call(await GetAdminTokenAsync(cancellationToken));
@@ -182,6 +190,10 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
             return KeycloakAdminResult.Failure(KeycloakAdminOutcome.UpstreamError, ex.StatusCode, ex.Message);
         }
         catch (JsonException ex)
+        {
+            return KeycloakAdminResult.Failure(KeycloakAdminOutcome.UpstreamError, null, ex.Message);
+        }
+        catch (InvalidOperationException ex)
         {
             return KeycloakAdminResult.Failure(KeycloakAdminOutcome.UpstreamError, null, ex.Message);
         }
@@ -198,14 +210,26 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
             ? KeycloakAdminResult<IReadOnlyList<T>>.Success(result.Value!)
             : KeycloakAdminResult<IReadOnlyList<T>>.Failure(result.Outcome, result.StatusCode, result.ErrorMessage);
 
-    private static void FillMissingProfileNames(KeycloakUserRepresentation user)
+    private static KeycloakUserRepresentation WithProfileNames(KeycloakUserRepresentation user)
     {
         var missingName = string.IsNullOrWhiteSpace(user.FirstName) || string.IsNullOrWhiteSpace(user.LastName);
         if (!missingName || string.IsNullOrWhiteSpace(user.Email))
-            return;
+            return user;
         var (firstName, lastName) = KeycloakProfileNames.FromEmail(user.Email);
-        user.FirstName = string.IsNullOrWhiteSpace(user.FirstName) ? firstName : user.FirstName;
-        user.LastName = string.IsNullOrWhiteSpace(user.LastName) ? lastName : user.LastName;
+        return new KeycloakUserRepresentation
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = string.IsNullOrWhiteSpace(user.FirstName) ? firstName : user.FirstName,
+            LastName = string.IsNullOrWhiteSpace(user.LastName) ? lastName : user.LastName,
+            Enabled = user.Enabled,
+            EmailVerified = user.EmailVerified,
+            CreatedTimestamp = user.CreatedTimestamp,
+            Attributes = user.Attributes,
+            Credentials = user.Credentials,
+            RequiredActions = user.RequiredActions,
+        };
     }
 
     private static string UserPath(string userId) => $"users/{Uri.EscapeDataString(userId)}";

@@ -8,6 +8,9 @@ namespace Identity.Keycloak.Extensions;
 
 public static class KeycloakAdminServiceCollectionExtensions
 {
+    private const string ServerUrlRequiredMessage =
+        "KeycloakAdmin:ServerUrl, KeycloakAdmin:Authority or Keycloak:Authority must be an absolute http(s) URL.";
+
     /// <summary>Registers IKeycloakAdminClient bound to KeycloakAdmin, falling back to Keycloak:Authority for the server URL.</summary>
     public static IHttpClientBuilder AddKeycloakAdminClient(this IServiceCollection services, IConfiguration configuration)
     {
@@ -17,7 +20,13 @@ public static class KeycloakAdminServiceCollectionExtensions
             {
                 if (string.IsNullOrWhiteSpace(options.Authority))
                     options.Authority = configuration[$"{KeycloakOptions.SectionName}:Authority"];
-            });
+            })
+            .Validate(HasAbsoluteServerUrl, ServerUrlRequiredMessage)
+            .ValidateOnStart();
         return services.AddKeycloakHttpClient<IKeycloakAdminClient, KeycloakAdminClient>(configuration);
     }
+
+    private static bool HasAbsoluteServerUrl(KeycloakAdminClientOptions options) =>
+        Uri.TryCreate(KeycloakServerUrl.Resolve(options.ServerUrl, options.Authority), UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
 }
