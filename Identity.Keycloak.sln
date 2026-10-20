@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Keycloak", "src\Identity.Keycloak\Identity.Keycloak.csproj", "{4141587A-B513-479C-923D-FBBD44A11743}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Keycloak.Tests", "tests\Identity.Keycloak.Tests\Identity.Keycloak.Tests.csproj", "{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,11 +33,24 @@ Global
 		{4141587A-B513-479C-923D-FBBD44A11743}.Release|x64.Build.0 = Release|Any CPU
 		{4141587A-B513-479C-923D-FBBD44A11743}.Release|x86.ActiveCfg = Release|Any CPU
 		{4141587A-B513-479C-923D-FBBD44A11743}.Release|x86.Build.0 = Release|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Debug|x64.Build.0 = Debug|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Debug|x86.Build.0 = Debug|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Release|x64.ActiveCfg = Release|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Release|x64.Build.0 = Release|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Release|x86.ActiveCfg = Release|Any CPU
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{4141587A-B513-479C-923D-FBBD44A11743} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{E7E6FA26-9090-4D28-9A08-82BD3F223F2D} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

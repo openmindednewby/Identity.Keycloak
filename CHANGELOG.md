@@ -7,6 +7,22 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.10.0] - 2026-10-21
+
+### Added
+- `Identity.Keycloak.Admin`: `IKeycloakAdminClient` / `KeycloakAdminClient`, a typed Keycloak Admin REST client for any realm
+  (EXTRACT-CS-KCADMIN-1 "Add a Keycloak admin REST client to Identity.Keycloak"). Admin token by client_credentials in a
+  configurable realm or by the master-realm password grant (`PreferMasterAdminPassword`, `MasterAdminClientId`); users
+  list/get/create/update/delete, reset password, logout, realm roles list/get/add/remove; every call returns
+  `KeycloakAdminResult` (NotFound / Conflict / BadRequest / AccessDenied / UpstreamError). Create fills a missing first or
+  last name from the email, because Keycloak refuses login without them.
+- `AddKeycloakAdminClient(configuration)` binds section `KeycloakAdmin` and registers the client through
+  `IHttpClientFactory` with the shared cert-skip policy (new `AddKeycloakHttpClient<TClient, TImplementation>`).
+- Helpers: `KeycloakServerUrl`, `KeycloakAdminErrorParser`, `KeycloakProfileNames`, `KeycloakUserQuery`.
+- First test project, `tests/Identity.Keycloak.Tests` (22 tests, fake `HttpMessageHandler`).
+
+No dependency change: `Identity.Abstractions` stays 1.7.1.
+
 ## [1.8.0] — 2026-08-23
 
 ### Changed

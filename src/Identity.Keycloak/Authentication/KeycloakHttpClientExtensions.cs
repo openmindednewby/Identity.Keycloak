@@ -57,6 +57,21 @@ public static class KeycloakHttpClientExtensions
             .ConfigurePrimaryHttpMessageHandler(() => CreateHandler(skipCertValidation));
     }
 
+    /// <summary>Registers a typed Keycloak client behind its interface, with the same cert-skip policy.</summary>
+    public static IHttpClientBuilder AddKeycloakHttpClient<TClient, TImplementation>(
+        this IServiceCollection services,
+        IConfiguration configuration)
+        where TClient : class
+        where TImplementation : class, TClient
+    {
+        var options = ReadKeycloakHttpOptions(configuration);
+        var skipCertValidation = ShouldSkipCertValidation(options, configuration);
+
+        return services
+            .AddHttpClient<TClient, TImplementation>()
+            .ConfigurePrimaryHttpMessageHandler(() => CreateHandler(skipCertValidation));
+    }
+
     /// <summary>
     /// Returns an <see cref="HttpClient"/> wired with the same cert-skip policy as
     /// the typed Keycloak clients, suitable for the JwtBearer backchannel's

@@ -15,6 +15,13 @@ dotnet add package Identity.Keycloak
 
 Keycloak OpenID Connect authentication provider implementation
 
+## Keycloak Admin REST client
+
+`services.AddKeycloakAdminClient(configuration)` registers `IKeycloakAdminClient` (section `KeycloakAdmin`: `ServerUrl` or
+`Keycloak:Authority`, `ClientCredentialsRealm`, `AdminClientId`, `AdminClientSecret`, optional `MasterAdminUser` /
+`MasterAdminPassword` / `MasterAdminClientId` / `PreferMasterAdminPassword`). Every method takes the realm, so one client
+serves multi-realm services; `SendAsync` covers admin endpoints the typed methods do not.
+
 ## Documentation
 
 See the [NuGet package page](https://www.nuget.org/packages/Identity.Keycloak) for full documentation.
