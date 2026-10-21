@@ -9,7 +9,7 @@ public class KeycloakAdminTokenCacheTests
     private const string TokenPathSuffix = "/protocol/openid-connect/token";
 
     [Fact]
-    public async Task GetUserRealmRolesAsync_AfterListUsers_ReusesAdminToken()
+    public async Task GetUserRealmRolesAsync_WhenCalledAfterListUsers_ReusesAdminToken()
     {
         const int expectedBearerCalls = 4;
         var (client, handler) = AdminClientFactory.Create(
