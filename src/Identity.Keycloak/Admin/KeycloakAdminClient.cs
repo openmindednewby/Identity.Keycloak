@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Identity.Keycloak.Admin;
@@ -9,6 +10,7 @@ namespace Identity.Keycloak.Admin;
 public sealed class KeycloakAdminClient : IKeycloakAdminClient
 {
     private const string AccessTokenField = "access_token";
+    private const string ExpiresInField = "expires_in";
     private const string RealmRolesPath = "roles";
     private const string UnsafePathSegmentMessage = "Realm and user id must be non-empty and must not be '.', '..' or contain a path separator.";
 
@@ -20,17 +22,33 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
     private readonly HttpClient _httpClient;
     private readonly KeycloakAdminClientOptions _options;
     private readonly string _serverUrl;
+    private readonly KeycloakAdminTokenCache _tokenCache;
 
     public KeycloakAdminClient(HttpClient httpClient, IOptions<KeycloakAdminClientOptions> options)
+        : this(httpClient, options, new KeycloakAdminTokenCache(TimeProvider.System))
+    {
+    }
+
+    [ActivatorUtilitiesConstructor]
+    public KeycloakAdminClient(HttpClient httpClient, IOptions<KeycloakAdminClientOptions> options, KeycloakAdminTokenCache tokenCache)
     {
         _httpClient = httpClient;
         _options = options.Value;
         _serverUrl = KeycloakServerUrl.Resolve(_options.ServerUrl, _options.Authority);
+        _tokenCache = tokenCache;
     }
 
     public async Task<string> GetAdminTokenAsync(CancellationToken cancellationToken = default)
     {
         var tokenRequest = KeycloakAdminTokenRequest.From(_options);
+        return await _tokenCache.GetOrFetchAsync(TokenCacheKey(tokenRequest), ct => RequestTokenAsync(tokenRequest, ct), cancellationToken);
+    }
+
+    private string TokenCacheKey(KeycloakAdminTokenRequest tokenRequest) =>
+        string.Join('|', _serverUrl, tokenRequest.Realm, tokenRequest.Form["grant_type"], tokenRequest.Form["client_id"], tokenRequest.Form.GetValueOrDefault("username", string.Empty));
+
+    private async Task<KeycloakAdminAccessToken> RequestTokenAsync(KeycloakAdminTokenRequest tokenRequest, CancellationToken cancellationToken)
+    {
         var endpoint = $"{_serverUrl}/realms/{Uri.EscapeDataString(tokenRequest.Realm)}/protocol/openid-connect/token";
         using var content = new FormUrlEncodedContent(tokenRequest.Form);
         using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
@@ -46,9 +64,14 @@ public sealed class KeycloakAdminClient : IKeycloakAdminClient
             && token.ValueKind == JsonValueKind.String
             && !string.IsNullOrEmpty(token.GetString());
         return hasToken
-            ? payload![AccessTokenField].GetString()!
+            ? new KeycloakAdminAccessToken(payload![AccessTokenField].GetString()!, LifetimeOf(payload!))
             : throw new HttpRequestException("Keycloak admin token response had no access_token.");
     }
+
+    private static TimeSpan LifetimeOf(Dictionary<string, JsonElement> payload) =>
+        payload.TryGetValue(ExpiresInField, out var expiresIn) && expiresIn.ValueKind == JsonValueKind.Number && expiresIn.TryGetInt32(out var seconds)
+            ? TimeSpan.FromSeconds(seconds)
+            : TimeSpan.Zero;
 
     public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string realm, string relativePath, HttpContent? content = null, CancellationToken cancellationToken = default)
     {

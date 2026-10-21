@@ -6,6 +6,8 @@ namespace Identity.Keycloak.Tests.Admin;
 
 internal static class AdminClientFactory
 {
+    public const int TokenLifetimeSeconds = 300;
+
     private const string TokenPath = "/protocol/openid-connect/token";
 
     public static (KeycloakAdminClient Client, FakeHttpMessageHandler Handler) Create(
@@ -29,11 +31,15 @@ internal static class AdminClientFactory
         KeycloakAdminClientOptions options,
         string token,
         Func<HttpRequestMessage, HttpResponseMessage> adminResponder,
-        HttpStatusCode tokenStatus = HttpStatusCode.OK)
+        HttpStatusCode tokenStatus = HttpStatusCode.OK,
+        KeycloakAdminTokenCache? tokenCache = null)
     {
         var handler = new FakeHttpMessageHandler(request => request.RequestUri!.AbsolutePath.EndsWith(TokenPath, StringComparison.Ordinal)
-            ? FakeHttpMessageHandler.Json(tokenStatus, tokenStatus == HttpStatusCode.OK ? $"{{\"access_token\":\"{token}\"}}" : "{\"error\":\"invalid_client\"}")
+            ? FakeHttpMessageHandler.Json(tokenStatus, tokenStatus == HttpStatusCode.OK ? $"{{\"access_token\":\"{token}\",\"expires_in\":{TokenLifetimeSeconds}}}" : "{\"error\":\"invalid_client\"}")
             : adminResponder(request));
-        return (new KeycloakAdminClient(new HttpClient(handler), Options.Create(options)), handler);
+        var client = tokenCache is null
+            ? new KeycloakAdminClient(new HttpClient(handler), Options.Create(options))
+            : new KeycloakAdminClient(new HttpClient(handler), Options.Create(options), tokenCache);
+        return (client, handler);
     }
 }

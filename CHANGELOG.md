@@ -7,6 +7,15 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.10.2] - 2026-10-21
+
+### Fixed
+- `KeycloakAdminClient` (EXTRACT-CS-KCADMIN-1 "Add a Keycloak admin REST client to Identity.Keycloak"): the admin token is reused
+  until 30 s before its `expires_in`, instead of one token request per admin call (a user list plus N role reads was 1 + N token
+  requests, now 1). New singleton `KeycloakAdminTokenCache`, keyed per server URL, token realm, grant and client/user, thread-safe
+  (one fetch per key under concurrency); registered by `AddKeycloakAdminClient`, honours a registered `TimeProvider`. A token
+  response without `expires_in` is not cached.
+
 ## [1.10.1] - 2026-10-21
 
 ### Fixed

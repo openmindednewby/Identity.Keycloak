@@ -3,6 +3,7 @@ using Identity.Keycloak.Authentication;
 using Identity.Keycloak.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Identity.Keycloak.Extensions;
 
@@ -23,6 +24,7 @@ public static class KeycloakAdminServiceCollectionExtensions
             })
             .Validate(HasAbsoluteServerUrl, ServerUrlRequiredMessage)
             .ValidateOnStart();
+        services.TryAddSingleton(provider => new KeycloakAdminTokenCache(provider.GetService<TimeProvider>() ?? TimeProvider.System));
         return services.AddKeycloakHttpClient<IKeycloakAdminClient, KeycloakAdminClient>(configuration);
     }
 
