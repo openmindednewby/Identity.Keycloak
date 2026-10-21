@@ -9,27 +9,28 @@ public class KeycloakAdminTokenCacheTests
     private const string TokenPathSuffix = "/protocol/openid-connect/token";
 
     [Fact]
-    public async Task ListUsersThenRolesPerUser_WithThreeUsers_RequestsOneAdminToken()
+    public async Task GetUserRealmRolesAsync_AfterListUsers_ReusesAdminToken()
     {
+        const int expectedBearerCalls = 4;
         var (client, handler) = AdminClientFactory.Create(
             "https://kc.test",
             "admin-token",
             request => request.RequestUri!.AbsolutePath.EndsWith("/users", StringComparison.Ordinal)
                 ? FakeHttpMessageHandler.Json(HttpStatusCode.OK, "[{\"id\":\"u-1\"},{\"id\":\"u-2\"},{\"id\":\"u-3\"}]")
                 : FakeHttpMessageHandler.Json(HttpStatusCode.OK, "[{\"name\":\"tenant-admin\"}]"));
-
         var users = await client.ListUsersAsync("kefi", new KeycloakUserQuery());
+
         foreach (var user in users.Value!)
             await client.GetUserRealmRolesAsync("kefi", user.Id!);
 
-        Assert.Equal(3, users.Value!.Count);
         Assert.Single(handler.Requests, request => request.Url.EndsWith(TokenPathSuffix, StringComparison.Ordinal));
-        Assert.Equal(4, handler.Requests.Count(request => request.Authorization == "Bearer admin-token"));
+        Assert.Equal(expectedBearerCalls, handler.Requests.Count(request => request.Authorization == "Bearer admin-token"));
     }
 
     [Fact]
     public async Task GetAdminTokenAsync_WhenTokenReachesRefreshMargin_RequestsNewToken()
     {
+        const int expectedTokenRequests = 2;
         var clock = new MutableTimeProvider();
         var (client, handler) = AdminClientFactory.Create(
             AdminOptions("kefi"), "admin-token", _ => new HttpResponseMessage(HttpStatusCode.OK), tokenCache: new KeycloakAdminTokenCache(clock));
@@ -38,7 +39,7 @@ public class KeycloakAdminTokenCacheTests
 
         await client.GetAdminTokenAsync();
 
-        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(expectedTokenRequests, handler.Requests.Count);
     }
 
     [Fact]
@@ -75,6 +76,8 @@ public class KeycloakAdminTokenCacheTests
     [Fact]
     public async Task GetAdminTokenAsync_WithConcurrentCallers_RequestsOneToken()
     {
+        const int callerCount = 10;
+        const int expectedTokenCalls = 1;
         var tokenCalls = 0;
         var handler = new FakeHttpMessageHandler(_ =>
         {
@@ -84,22 +87,23 @@ public class KeycloakAdminTokenCacheTests
         });
         var client = new KeycloakAdminClient(new HttpClient(handler), Options.Create(AdminOptions("kefi")), new KeycloakAdminTokenCache(new MutableTimeProvider()));
 
-        var tokens = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => Task.Run(() => client.GetAdminTokenAsync())));
+        var tokens = await Task.WhenAll(Enumerable.Range(0, callerCount).Select(_ => Task.Run(() => client.GetAdminTokenAsync())));
 
         Assert.All(tokens, token => Assert.Equal("admin-token", token));
-        Assert.Equal(1, tokenCalls);
+        Assert.Equal(expectedTokenCalls, tokenCalls);
     }
 
     [Fact]
     public async Task GetAdminTokenAsync_WithoutExpiresIn_RequestsNewTokenEachCall()
     {
+        const int expectedTokenRequests = 2;
         var handler = new FakeHttpMessageHandler(_ => FakeHttpMessageHandler.Json(HttpStatusCode.OK, "{\"access_token\":\"admin-token\"}"));
         var client = new KeycloakAdminClient(new HttpClient(handler), Options.Create(AdminOptions("kefi")), new KeycloakAdminTokenCache(new MutableTimeProvider()));
         await client.GetAdminTokenAsync();
 
         await client.GetAdminTokenAsync();
 
-        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal(expectedTokenRequests, handler.Requests.Count);
     }
 
     private static KeycloakAdminClientOptions AdminOptions(string realm) => new()
