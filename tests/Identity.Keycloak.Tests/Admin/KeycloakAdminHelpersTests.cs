@@ -76,6 +76,45 @@ public class KeycloakAdminHelpersTests
         Assert.Equal("Account", lastName);
     }
 
+    [Theory]
+    [InlineData("smoke@dloizides.com", "Smoke")]
+    [InlineData("info@example.com", "Info")]
+    [InlineData("HELLO@example.com", "Hello")]
+    public void FromEmail_WithoutSeparator_RepeatsLocalPartInBothFields(string email, string expected)
+    {
+        var (firstName, lastName) = KeycloakProfileNames.FromEmail(email);
+
+        Assert.Equal(expected, firstName);
+        Assert.Equal(expected, lastName);
+    }
+
+    [Theory]
+    [InlineData("jane_smith@example.com", "Jane", "Smith")]
+    [InlineData("alex-rivera@example.com", "Alex", "Rivera")]
+    [InlineData("dev+test@example.com", "Dev", "Test")]
+    public void FromEmail_WithNonDotSeparator_SplitsFirstAndLast(string email, string expectedFirst, string expectedLast)
+    {
+        var (firstName, lastName) = KeycloakProfileNames.FromEmail(email);
+
+        Assert.Equal(expectedFirst, firstName);
+        Assert.Equal(expectedLast, lastName);
+    }
+
+    [Theory]
+    [InlineData("a@b.com")]
+    [InlineData("a.b@c.com")]
+    [InlineData("...@example.com")]
+    [InlineData("single@example.com")]
+    [InlineData("_@example.com")]
+    [InlineData("no-at-sign")]
+    public void FromEmail_WithAnyInput_ReturnsNonEmptyFields(string email)
+    {
+        var (firstName, lastName) = KeycloakProfileNames.FromEmail(email);
+
+        Assert.False(string.IsNullOrEmpty(firstName));
+        Assert.False(string.IsNullOrEmpty(lastName));
+    }
+
     [Fact]
     public void ToQueryString_WithoutFilters_ReturnsEmpty()
     {
