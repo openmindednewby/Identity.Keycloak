@@ -27,7 +27,7 @@ internal static class KeycloakUserRealmRoleReader
         string userId,
         CancellationToken cancellationToken)
     {
-        using var response = await httpClient.GetAsync(adminApiUrl($"users/{userId}/role-mappings/realm"), cancellationToken);
+        using var response = await SendAsync(httpClient, adminApiUrl($"users/{userId}/role-mappings/realm"), userId, cancellationToken);
         if (!response.IsSuccessStatusCode)
             throw new KeycloakRoleLookupException(userId, response.StatusCode);
         try
@@ -38,6 +38,22 @@ internal static class KeycloakUserRealmRoleReader
         catch (JsonException ex)
         {
             throw new KeycloakRoleLookupException(userId, response.StatusCode, ex);
+        }
+    }
+
+    private static async Task<HttpResponseMessage> SendAsync(HttpClient httpClient, string url, string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await httpClient.GetAsync(url, cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new KeycloakRoleLookupException(userId, ex.StatusCode, ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new KeycloakRoleLookupException(userId, null, ex);
         }
     }
 

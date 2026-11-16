@@ -7,6 +7,13 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.11.1] - 2026-11-16
+
+### Fixed
+- `KeycloakUserManagementService` (FINREG-FUNDS-1 "Tenant funds, deal gate, blocking roles" review fixes): a role-mappings
+  request that throws `HttpRequestException` or times out (`TaskCanceledException` without caller cancellation) now throws
+  `KeycloakRoleLookupException` instead of returning an empty user list / `null`.
+
 ## [1.11.0] - 2026-11-16
 
 ### Fixed

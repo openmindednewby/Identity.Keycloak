@@ -77,6 +77,36 @@ public sealed class KeycloakUserManagementServiceRolesTests
     }
 
     [Fact]
+    public async Task GetUsersAsync_WhenRoleMappingsRequestThrows_ThrowsKeycloakRoleLookupException()
+    {
+        var responses = new Dictionary<string, (HttpStatusCode, string)>
+        {
+            [$"{AdminBase}/users"] = (HttpStatusCode.OK, """[{"id":"u-1","username":"alice","enabled":true}]"""),
+        };
+        var service = CreateService(responses, new HttpRequestException("Connection refused"));
+
+        var act = () => service.GetUsersAsync();
+
+        var ex = await Assert.ThrowsAsync<KeycloakRoleLookupException>(act);
+        Assert.IsType<HttpRequestException>(ex.InnerException);
+    }
+
+    [Fact]
+    public async Task GetUserByIdAsync_WhenRoleMappingsRequestTimesOut_ThrowsKeycloakRoleLookupException()
+    {
+        var responses = new Dictionary<string, (HttpStatusCode, string)>
+        {
+            [$"{AdminBase}/users/u-1"] = (HttpStatusCode.OK, """{"id":"u-1","username":"alice","enabled":true}"""),
+        };
+        var service = CreateService(responses, new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout"));
+
+        var act = () => service.GetUserByIdAsync("u-1");
+
+        var ex = await Assert.ThrowsAsync<KeycloakRoleLookupException>(act);
+        Assert.IsType<TaskCanceledException>(ex.InnerException);
+    }
+
+    [Fact]
     public async Task GetUsersAsync_WhenUsersGetFails_ReturnsEmptyList()
     {
         var responses = new Dictionary<string, (HttpStatusCode, string)>
@@ -104,13 +134,20 @@ public sealed class KeycloakUserManagementServiceRolesTests
         Assert.False(assigned);
     }
 
-    private static KeycloakUserManagementService CreateService(Dictionary<string, (HttpStatusCode Status, string Json)> responses)
+    private static KeycloakUserManagementService CreateService(Dictionary<string, (HttpStatusCode Status, string Json)> responses) =>
+        CreateService(responses, roleMappingsFailure: null);
+
+    private static KeycloakUserManagementService CreateService(
+        Dictionary<string, (HttpStatusCode Status, string Json)> responses,
+        Exception? roleMappingsFailure)
     {
         var handler = new FakeHttpMessageHandler(request =>
         {
             var url = request.RequestUri!.AbsoluteUri;
             if (url.EndsWith("/protocol/openid-connect/token", StringComparison.Ordinal))
                 return FakeHttpMessageHandler.Json(HttpStatusCode.OK, TokenJson);
+            if (roleMappingsFailure is not null && url.EndsWith("/role-mappings/realm", StringComparison.Ordinal))
+                throw roleMappingsFailure;
             return responses.TryGetValue(url, out var response)
                 ? FakeHttpMessageHandler.Json(response.Status, response.Json)
                 : FakeHttpMessageHandler.Json(HttpStatusCode.NotFound, """{"error":"not found"}""");
