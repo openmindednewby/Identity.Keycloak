@@ -88,10 +88,11 @@ public class KeycloakUserManagementService : IUserManagementService
             var response = await _httpClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var users = await response.Content.ReadFromJsonAsync<List<KeycloakUser>>(cancellationToken);
-            return users?.Select(MapToUserListItem).ToList() ?? new List<UserListItem>();
+            var users = await response.Content.ReadFromJsonAsync<List<KeycloakUser>>(cancellationToken) ?? new List<KeycloakUser>();
+            var roles = await KeycloakUserRealmRoleReader.ReadAsync(_httpClient, GetAdminApiUrl, users.Select(u => u.Id).ToList(), cancellationToken);
+            return users.Select(u => KeycloakUserListItemMapper.Map(u, roles[u.Id])).ToList();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not KeycloakRoleLookupException)
         {
             _logger.LogError(ex, "Failed to get users");
             return new List<UserListItem>();
@@ -111,9 +112,11 @@ public class KeycloakUserManagementService : IUserManagementService
             if (!response.IsSuccessStatusCode) return null;
 
             var user = await response.Content.ReadFromJsonAsync<KeycloakUser>(cancellationToken);
-            return user != null ? MapToUserListItem(user) : null;
+            if (user == null) return null;
+            var roles = await KeycloakUserRealmRoleReader.ReadAsync(_httpClient, GetAdminApiUrl, [user.Id], cancellationToken);
+            return KeycloakUserListItemMapper.Map(user, roles[user.Id]);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not KeycloakRoleLookupException)
         {
             _logger.LogError(ex, "Failed to get user {UserId}", userId);
             return null;
@@ -262,6 +265,7 @@ public class KeycloakUserManagementService : IUserManagementService
             // Get available realm roles
             var rolesUrl = GetAdminApiUrl("roles");
             var rolesResponse = await _httpClient.GetAsync(rolesUrl, cancellationToken);
+            rolesResponse.EnsureSuccessStatusCode();
             var availableRoles = await rolesResponse.Content.ReadFromJsonAsync<List<KeycloakRole>>(cancellationToken);
 
             // Filter to requested roles
@@ -399,48 +403,7 @@ public class KeycloakUserManagementService : IUserManagementService
         }
     }
 
-    private static UserListItem MapToUserListItem(KeycloakUser user)
-    {
-        // Extract tenantId from Keycloak attributes
-        string? tenantId = null;
-        if (user.Attributes?.TryGetValue("tenantId", out var tenantIdValues) == true && tenantIdValues?.Length > 0)
-            tenantId = tenantIdValues[0];
-
-        // Extract phoneNumber from Keycloak attributes
-        string? phoneNumber = null;
-        if (user.Attributes?.TryGetValue("phoneNumber", out var phoneValues) == true && phoneValues?.Length > 0)
-            phoneNumber = phoneValues[0];
-
-        return new UserListItem
-        {
-            Id = user.Id,
-            Username = user.Username,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Enabled = user.Enabled,
-            CreatedTimestamp = user.CreatedTimestamp.HasValue
-                ? DateTimeOffset.FromUnixTimeMilliseconds(user.CreatedTimestamp.Value).DateTime
-                : null,
-            PhoneNumber = phoneNumber,
-            Roles = new List<string>(), // Roles would need separate call to fetch
-            TenantId = tenantId
-        };
-    }
-
     // Internal Keycloak models
-    private class KeycloakUser
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public bool Enabled { get; set; }
-        public long? CreatedTimestamp { get; set; }
-        public Dictionary<string, string[]>? Attributes { get; set; }
-    }
-
     private class KeycloakRole
     {
         public string Id { get; set; } = string.Empty;

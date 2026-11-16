@@ -7,6 +7,16 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.11.0] - 2026-11-16
+
+### Fixed
+- `KeycloakUserManagementService` (FINREG-FUNDS-1 "Tenant funds, deal gate, blocking roles"): `GetUsersAsync` and
+  `GetUserByIdAsync` now fill `UserListItem.Roles` from `users/{id}/role-mappings/realm` (at most 8 requests at once);
+  before, `Roles` was always empty, so callers that confirm a role assignment or count admins saw none.
+- A failed role-mappings read throws the new `KeycloakRoleLookupException` (an `HttpRequestException`) instead of
+  returning users with no roles. A failed users read still returns an empty list / `null`.
+- `AssignRolesAsync` returns `false` when the realm roles read fails, instead of `true` with nothing assigned.
+
 ## [1.10.2] - 2026-10-21
 
 ### Fixed
