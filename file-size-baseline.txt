@@ -1,0 +1,3 @@
+src/Identity.Keycloak/KeycloakIdentityProvider.cs 340
+src/Identity.Keycloak/Services/KeycloakTokenService.cs 370
+src/Identity.Keycloak/Services/KeycloakUserManagementService.cs 421

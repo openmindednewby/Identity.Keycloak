@@ -1,0 +1,2 @@
+src/Identity.Keycloak/Admin/KeycloakAdminClient.cs 3
+src/Identity.Keycloak/Services/KeycloakUserManagementService.cs 2
