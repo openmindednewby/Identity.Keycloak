@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using Identity.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.Extensions.Options;
 using Security.Claims.Claims;
 
 namespace Identity.Keycloak.Authorization;
@@ -18,11 +20,19 @@ namespace Identity.Keycloak.Authorization;
 /// </remarks>
 public sealed class SuperUserAuthorizationHandler : AuthorizationHandler<RolesAuthorizationRequirement>
 {
+    private readonly string _platformRealm;
+
+    public SuperUserAuthorizationHandler(IOptions<KeycloakRoleMappingOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        _platformRealm = options.Value.PlatformRealm ?? string.Empty;
+    }
+
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         RolesAuthorizationRequirement requirement)
     {
-        if (context.User.IsSuperUser())
+        if (context.User.IsSuperUser(_platformRealm))
         {
             context.Succeed(requirement);
         }

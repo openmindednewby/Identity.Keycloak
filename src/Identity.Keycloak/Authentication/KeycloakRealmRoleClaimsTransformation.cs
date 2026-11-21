@@ -24,30 +24,9 @@ public sealed class KeycloakRealmRoleClaimsTransformation : IClaimsTransformatio
         var realm = RealmExtensions.ExtractRealmFromIssuer(identity?.FindFirst("iss")?.Value);
         if (identity is not null && realm is not null && _options.AllowedRealms.Contains(realm, StringComparer.OrdinalIgnoreCase))
         {
-            AddRoleClaims(identity, string.Equals(realm, _options.PlatformRealm, StringComparison.OrdinalIgnoreCase));
+            PrivilegedRoleFilter.AddRealmRoleClaims(identity, _options);
         }
 
         return Task.FromResult(principal);
     }
-
-    private void AddRoleClaims(ClaimsIdentity identity, bool fromPlatformRealm)
-    {
-        if (!fromPlatformRealm)
-        {
-            foreach (var claim in identity.FindAll(identity.RoleClaimType).Where(IsPrivileged).ToList())
-            {
-                identity.RemoveClaim(claim);
-            }
-        }
-
-        var roles = KeycloakClaimsHelper.RealmRolesOf(identity).Where(role => fromPlatformRealm || !IsPrivileged(role));
-        foreach (var role in roles.Where(role => !identity.HasClaim(ClaimTypes.Role, role)))
-        {
-            identity.AddClaim(new Claim(ClaimTypes.Role, role));
-        }
-    }
-
-    private bool IsPrivileged(Claim claim) => IsPrivileged(claim.Value);
-
-    private bool IsPrivileged(string role) => _options.PrivilegedRoles.Contains(role, StringComparer.OrdinalIgnoreCase);
 }

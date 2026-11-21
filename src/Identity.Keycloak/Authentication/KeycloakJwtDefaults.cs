@@ -69,6 +69,16 @@ public static class KeycloakJwtDefaults
         return authentication;
     }
 
+    internal static void ConfigurePrivilegedRoles(KeycloakRoleMappingOptions options, IConfiguration configuration)
+    {
+        options.PlatformRealm = configuration[PlatformRealmKey];
+        var privilegedRoles = configuration.GetSection(PrivilegedRolesKey).Get<string[]>();
+        if (privilegedRoles is { Length: > 0 })
+        {
+            options.PrivilegedRoles = privilegedRoles;
+        }
+    }
+
     private static AuthenticationBuilder AddWithoutAuthentication(IServiceCollection services, bool authenticationEnabled)
     {
         if (authenticationEnabled)
@@ -111,12 +121,7 @@ public static class KeycloakJwtDefaults
     private static void ConfigureRoleMapping(KeycloakRoleMappingOptions options, IConfiguration configuration)
     {
         options.AllowedRealms = RealmsOf(configuration);
-        options.PlatformRealm = configuration[PlatformRealmKey];
-        var privilegedRoles = configuration.GetSection(PrivilegedRolesKey).Get<string[]>();
-        if (privilegedRoles is { Length: > 0 })
-        {
-            options.PrivilegedRoles = privilegedRoles;
-        }
+        ConfigurePrivilegedRoles(options, configuration);
     }
 
     private static string[] RealmsOf(IConfiguration configuration) =>

@@ -1,3 +1,4 @@
+using Identity.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -54,6 +55,8 @@ public static class RealmAuthorizationExtensions
 
         if (enableSuperUser)
         {
+            builder.Services.AddOptions<KeycloakRoleMappingOptions>()
+                .Configure(options => KeycloakJwtDefaults.ConfigurePrivilegedRoles(options, builder.Configuration));
             builder.Services.AddSingleton<IAuthorizationHandler, SuperUserAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationHandler, SuperUserFallbackHandler>();
         }

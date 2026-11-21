@@ -7,6 +7,16 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.13.2] - 2026-11-21
+
+### Security
+- SEC-REALM-1 "A tenant realm can never grant platform super-user": `KeycloakClaimsHelper.MapKeycloakRoleClaims` now
+  applies the same privileged-role filter as the transformation (realm from the token `iss`, privileged roles only from
+  `Authentication:PlatformRealm`, read from `IOptions<KeycloakRoleMappingOptions>`; unset grants none).
+- `SuperUserAuthorizationHandler` and `SuperUserFallbackHandler` call `Security.Claims` `IsSuperUser(platformRealm)`, so a
+  `superUser` role claim from any other realm (for example a service's own claims transformation) grants nothing.
+  `AddRealmAuthorization(enableSuperUser: true)` binds `Authentication:PlatformRealm` and `Authentication:PrivilegedRoles`.
+
 ## [1.13.1] - 2026-11-21
 
 ### Security

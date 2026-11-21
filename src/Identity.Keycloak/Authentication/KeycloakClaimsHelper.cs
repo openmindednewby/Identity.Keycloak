@@ -1,13 +1,15 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Identity.Keycloak.Authentication;
 
 /// <summary>Maps Keycloak realm roles to role claims and derives the server URL from a realm authority.</summary>
 public static class KeycloakClaimsHelper
 {
-    /// <summary>Adds a role claim per realm_access.roles entry of the validated principal.</summary>
+    /// <summary>Adds a role claim per realm_access.roles entry; privileged roles only from the platform realm.</summary>
     public static void MapKeycloakRoleClaims(TokenValidatedContext context)
     {
         if (context.Principal?.Identity is not ClaimsIdentity identity)
@@ -15,10 +17,9 @@ public static class KeycloakClaimsHelper
             return;
         }
 
-        foreach (var role in RealmRolesOf(identity).Where(role => !identity.HasClaim(ClaimTypes.Role, role)))
-        {
-            identity.AddClaim(new Claim(ClaimTypes.Role, role));
-        }
+        var options = context.HttpContext.RequestServices.GetService<IOptions<KeycloakRoleMappingOptions>>()?.Value
+            ?? new KeycloakRoleMappingOptions();
+        PrivilegedRoleFilter.AddRealmRoleClaims(identity, options);
     }
 
     /// <summary>Extracts the Keycloak server URL from a realm authority URL; null for a blank input.</summary>

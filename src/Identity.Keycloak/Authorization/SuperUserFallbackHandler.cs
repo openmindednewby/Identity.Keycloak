@@ -1,4 +1,6 @@
+using Identity.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using Security.Claims.Claims;
 
 namespace Identity.Keycloak.Authorization;
@@ -17,11 +19,19 @@ namespace Identity.Keycloak.Authorization;
 /// </remarks>
 public sealed class SuperUserFallbackHandler : AuthorizationHandler<IAuthorizationRequirement>
 {
+    private readonly string _platformRealm;
+
+    public SuperUserFallbackHandler(IOptions<KeycloakRoleMappingOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        _platformRealm = options.Value.PlatformRealm ?? string.Empty;
+    }
+
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         IAuthorizationRequirement requirement)
     {
-        if (context.User.IsSuperUser())
+        if (context.User.IsSuperUser(_platformRealm))
         {
             context.Succeed(requirement);
         }
