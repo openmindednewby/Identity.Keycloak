@@ -96,6 +96,7 @@ public static class MultiRealmJwtBearerExtensions
         options.TokenValidationParameters.ValidateIssuer = true;
         options.TokenValidationParameters.ValidIssuers = validIssuers;
         options.TokenValidationParameters.ValidateIssuerSigningKey = true;
+        options.TokenValidationParameters.TryAllIssuerSigningKeys = false;
         options.TokenValidationParameters.ValidateLifetime = true;
         options.TokenValidationParameters.IssuerValidator = KeycloakOwnedValidators.Mark(MakeIssuerValidator(realmConfigs));
         options.TokenValidationParameters.IssuerSigningKeyResolver = KeycloakOwnedValidators.Mark(MakeIssuerSigningKeyResolver(realmConfigs));
@@ -128,7 +129,7 @@ public static class MultiRealmJwtBearerExtensions
 
     private static IssuerSigningKeyResolver MakeIssuerSigningKeyResolver(List<RealmConfig> realmConfigs)
     {
-        return (_, securityToken, _, _) =>
+        return (_, securityToken, keyId, _) =>
         {
             var issuer = securityToken?.Issuer;
             if (string.IsNullOrEmpty(issuer))
@@ -145,7 +146,7 @@ public static class MultiRealmJwtBearerExtensions
                 var config = realmConfigs[i].ConfigurationManager
                     .GetConfigurationAsync(CancellationToken.None)
                     .GetAwaiter().GetResult();
-                return config.SigningKeys;
+                return config.SigningKeys.Where(key => string.Equals(key.KeyId, keyId, StringComparison.Ordinal)).ToArray();
             }
             return Array.Empty<SecurityKey>();
         };

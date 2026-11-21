@@ -16,6 +16,7 @@ internal sealed class JwtBearerFloorValidator : IValidateOptions<JwtBearerOption
             (parameters.ValidateLifetime, "ValidateLifetime must be true"),
             (parameters.ValidateIssuerSigningKey, "ValidateIssuerSigningKey must be true"),
             (parameters.RequireSignedTokens, "RequireSignedTokens must be true"),
+            (parameters.RequireExpirationTime, "RequireExpirationTime must be true"),
             (parameters.ClockSkew <= KeycloakJwtDefaults.MaxClockSkew, $"ClockSkew must be at most {KeycloakJwtDefaults.MaxClockSkew}"),
             (algorithms.Length > 0 && algorithms.All(KeycloakJwtDefaults.AllowedAlgorithms.Contains), "ValidAlgorithms must be RS256 or ES256 only"),
         }

@@ -7,6 +7,21 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.12.2] - 2026-11-21
+
+### Security
+- D-SVCDEF-41 "The package owns JWT events and key sources": every JwtBearerEvents delegate must be the package default and any
+  EventsType fails startup; claim changes go through IClaimsTransformation. The package events log challenges and failed
+  authentications (path, error, exception type).
+- Configuration, ConfigurationManager (other than the one the framework builds from Authority), TokenValidationParameters
+  ConfigurationManager, IssuerSigningKey(s) and CryptoProviderFactory set by a service fail startup; ConfigureMultiRealm sets
+  TryAllIssuerSigningKeys = false and its key resolver returns only the key whose kid matches, so an unknown kid gets 401.
+- The floor requires RequireExpirationTime = true.
+
+### Added
+- `AuthenticationBuilder.AllowQueryStringToken(params string[] pathPrefixes)`: accepts `?access_token=` only under the named
+  path prefixes (SignalR hubs).
+
 ## [1.12.1] - 2026-11-21
 
 ### Security

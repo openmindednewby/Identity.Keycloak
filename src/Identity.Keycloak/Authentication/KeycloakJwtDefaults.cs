@@ -88,6 +88,7 @@ public static class KeycloakJwtDefaults
         options.MapInboundClaims = false;
         options.ConfigureMultiRealm(KeycloakClaimsHelper.DeriveServerUrl(authority)!, RealmsOf(configuration), requireHttpsMetadata, backchannel);
         options.Audience = audience;
+        options.Events = new KeycloakJwtBearerEvents();
         var parameters = options.TokenValidationParameters;
         parameters.ValidAudience = audience;
         parameters.ValidateAudience = true;

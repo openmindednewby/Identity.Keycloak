@@ -64,6 +64,19 @@ internal sealed class FakeKeycloak : IAsyncDisposable
             Descriptor(audience, DateTime.UtcNow.AddMinutes(5), new SigningCredentials(unknownKey, SecurityAlgorithms.RsaSha256)));
     }
 
+    public string CreateTokenWithKeyId(string audience, string keyId) =>
+        new JsonWebTokenHandler().CreateToken(Descriptor(
+            audience,
+            DateTime.UtcNow.AddMinutes(5),
+            new SigningCredentials(new RsaSecurityKey(_key.Rsa) { KeyId = keyId }, SecurityAlgorithms.RsaSha256)));
+
+    public string CreateTokenWithoutExpiry(string audience)
+    {
+        var descriptor = Descriptor(audience, DateTime.UtcNow.AddMinutes(5), new SigningCredentials(_key, SecurityAlgorithms.RsaSha256));
+        descriptor.Expires = null;
+        return new JsonWebTokenHandler { SetDefaultTimesOnTokenCreation = false }.CreateToken(descriptor);
+    }
+
     public async ValueTask DisposeAsync() => await _app.DisposeAsync();
 
     private SecurityTokenDescriptor Descriptor(string audience, DateTime expiresUtc, SigningCredentials? credentials) => new()
