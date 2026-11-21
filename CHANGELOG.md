@@ -7,6 +7,13 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.13.0] - 2026-11-21
+
+### Added
+- `AddKeycloakJwtDefaults` registers an `IClaimsTransformation` that adds one `ClaimTypes.Role` claim per
+  `realm_access.roles` entry (SVCDEF-1 D-SVCDEF-42 item A), so services delete their own
+  `KeycloakRealmRoleClaimsTransformation` copy. A token without `realm_access` gets no role claims.
+
 ## [1.12.3] - 2026-11-21
 
 ### Security

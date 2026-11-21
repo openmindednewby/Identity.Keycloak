@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Identity.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -14,6 +15,8 @@ namespace Identity.Keycloak.Tests.JwtDefaults;
 internal sealed class JwtDefaultsHost : IAsyncDisposable
 {
     public const string SecurePath = "/secure";
+
+    public const string RolesPath = "/roles";
 
     private readonly WebApplication _app;
 
@@ -49,6 +52,7 @@ internal sealed class JwtDefaultsHost : IAsyncDisposable
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapGet(SecurePath, () => "secret");
+        app.MapGet(RolesPath, (ClaimsPrincipal user) => user.FindAll(ClaimTypes.Role).Select(claim => claim.Value).ToArray());
         await app.StartAsync();
 
         var address = app.Services.GetRequiredService<IServer>().Features

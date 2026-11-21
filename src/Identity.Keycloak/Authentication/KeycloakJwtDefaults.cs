@@ -24,7 +24,7 @@ public static class KeycloakJwtDefaults
 
     internal static readonly string[] AllowedAlgorithms = [SecurityAlgorithms.RsaSha256, SecurityAlgorithms.EcdsaSha256];
 
-    /// <summary>Binds Keycloak JWT settings; startup fails when any JwtBearer scheme is below the floor.</summary>
+    /// <summary>Binds Keycloak JWT settings and maps realm roles to role claims; startup fails when any JwtBearer scheme is below the floor.</summary>
     public static AuthenticationBuilder AddKeycloakJwtDefaults(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -57,6 +57,7 @@ public static class KeycloakJwtDefaults
             .Configure<ILoggerFactory>((options, loggerFactory) =>
                 ConfigureJwtBearer(options, configuration, BackchannelFor(configuration, environment, loggerFactory)))
             .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IClaimsTransformation, KeycloakRealmRoleClaimsTransformation>());
         AddFloor(services);
         return authentication;
     }

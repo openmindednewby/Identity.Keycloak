@@ -77,6 +77,13 @@ internal sealed class FakeKeycloak : IAsyncDisposable
         return new JsonWebTokenHandler { SetDefaultTimesOnTokenCreation = false }.CreateToken(descriptor);
     }
 
+    public string CreateTokenWithRealmRoles(string audience, string[] roles)
+    {
+        var descriptor = Descriptor(audience, DateTime.UtcNow.AddMinutes(5), new SigningCredentials(_key, SecurityAlgorithms.RsaSha256));
+        descriptor.Claims = new Dictionary<string, object> { ["realm_access"] = new Dictionary<string, object> { ["roles"] = roles } };
+        return new JsonWebTokenHandler().CreateToken(descriptor);
+    }
+
     public async ValueTask DisposeAsync() => await _app.DisposeAsync();
 
     private SecurityTokenDescriptor Descriptor(string audience, DateTime expiresUtc, SigningCredentials? credentials) => new()
