@@ -11,9 +11,9 @@ public static class KeycloakQueryStringTokenExtensions
     {
         ArgumentNullException.ThrowIfNull(authentication);
         ArgumentNullException.ThrowIfNull(pathPrefixes);
-        if (pathPrefixes.Length == 0 || Array.Exists(pathPrefixes, prefix => string.IsNullOrWhiteSpace(prefix) || !prefix.StartsWith('/')))
+        if (pathPrefixes.Length == 0 || Array.Exists(pathPrefixes, prefix => string.IsNullOrWhiteSpace(prefix) || !prefix.StartsWith('/') || prefix.Trim('/').Length == 0))
         {
-            throw new ArgumentException("Each path prefix must start with a slash.", nameof(pathPrefixes));
+            throw new ArgumentException("Each path prefix must start with a slash and name at least one segment.", nameof(pathPrefixes));
         }
 
         authentication.Services.Configure<KeycloakQueryStringTokenOptions>(options =>

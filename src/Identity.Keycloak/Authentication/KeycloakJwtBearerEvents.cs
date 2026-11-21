@@ -11,11 +11,17 @@ internal sealed class KeycloakJwtBearerEvents : JwtBearerEvents
 
     private const string LoggerCategory = "Identity.Keycloak.JwtBearer";
 
+    private static readonly Func<MessageReceivedContext, Task> QueryStringTokenReader = ReadQueryStringTokenAsync;
+
+    private static readonly Func<AuthenticationFailedContext, Task> AuthenticationFailedLogger = LogAuthenticationFailedAsync;
+
+    private static readonly Func<JwtBearerChallengeContext, Task> ChallengeLogger = LogChallengeAsync;
+
     public KeycloakJwtBearerEvents()
     {
-        OnMessageReceived = ReadQueryStringTokenAsync;
-        OnAuthenticationFailed = LogAuthenticationFailedAsync;
-        OnChallenge = LogChallengeAsync;
+        OnMessageReceived = QueryStringTokenReader;
+        OnAuthenticationFailed = AuthenticationFailedLogger;
+        OnChallenge = ChallengeLogger;
     }
 
     private static Task ReadQueryStringTokenAsync(MessageReceivedContext context)

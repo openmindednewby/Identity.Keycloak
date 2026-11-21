@@ -4,6 +4,8 @@ using Identity.Keycloak.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Shouldly;
 
@@ -150,10 +152,86 @@ public class JwtExtensionPointTests
     }
 
     [Fact]
+    public async Task StartAsync_WithForgedHandlerPrependedToOnMessageReceived_ThrowsOptionsValidation()
+    {
+        await using var keycloak = await FakeKeycloak.StartAsync();
+
+        var start = () => JwtDefaultsHost.StartAsync(
+            JwtValidationTests.JwtSettings(keycloak, Audience),
+            services: services => PostConfigureBearer(services, options =>
+                options.Events.OnMessageReceived = (Func<MessageReceivedContext, Task>)Delegate.Combine(
+                    new Func<MessageReceivedContext, Task>(ForgeTokenAsync),
+                    options.Events.OnMessageReceived)));
+
+        (await start.ShouldThrowAsync<OptionsValidationException>()).Message.ShouldContain("OnMessageReceived must be the package default");
+    }
+
+    [Fact]
+    public async Task StartAsync_WithForgedHandlerPrependedToOnTokenValidated_ThrowsOptionsValidation()
+    {
+        await using var keycloak = await FakeKeycloak.StartAsync();
+
+        var start = () => JwtDefaultsHost.StartAsync(
+            JwtValidationTests.JwtSettings(keycloak, Audience),
+            services: services => PostConfigureBearer(services, options =>
+                options.Events.OnTokenValidated = (Func<TokenValidatedContext, Task>)Delegate.Combine(
+                    new Func<TokenValidatedContext, Task>(_ => Task.CompletedTask),
+                    options.Events.OnTokenValidated)));
+
+        (await start.ShouldThrowAsync<OptionsValidationException>()).Message.ShouldContain("OnTokenValidated must be the package default");
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("")]
+    public void AllowQueryStringToken_WithoutPathSegment_ThrowsArgument(string prefix)
+    {
+        var authentication = new ServiceCollection().AddAuthentication();
+
+        var allow = () => authentication.AllowQueryStringToken(prefix);
+
+        allow.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task StartAsync_WithServiceConfigurationManagerAtSameMetadataAddress_ThrowsOptionsValidation()
+    {
+        await using var keycloak = await FakeKeycloak.StartAsync();
+        var metadataAddress = $"{keycloak.ServerUrl}/realms/{FakeKeycloak.Realm}/.well-known/openid-configuration";
+
+        var start = () => JwtDefaultsHost.StartAsync(
+            JwtValidationTests.JwtSettings(keycloak, Audience),
+            services: services => PostConfigureBearer(services, options =>
+            {
+                options.TokenValidationParameters.IssuerSigningKeyResolver = null;
+                options.MetadataAddress = metadataAddress;
+                options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+                    metadataAddress,
+                    new OpenIdConnectConfigurationRetriever(),
+                    new HttpDocumentRetriever { RequireHttps = false });
+            }));
+
+        (await start.ShouldThrowAsync<OptionsValidationException>()).Message.ShouldContain("ConfigurationManager must not be set outside Identity.Keycloak");
+    }
+
+    [Fact]
+    public async Task StartAsync_WithPackageResolverRemoved_ThrowsOptionsValidation()
+    {
+        await using var keycloak = await FakeKeycloak.StartAsync();
+
+        var start = () => JwtDefaultsHost.StartAsync(
+            JwtValidationTests.JwtSettings(keycloak, Audience),
+            services: services => PostConfigureBearer(services, options =>
+                options.TokenValidationParameters.IssuerSigningKeyResolver = null));
+
+        (await start.ShouldThrowAsync<OptionsValidationException>()).Message.ShouldContain("IssuerSigningKeyResolver must be the package resolver");
+    }
+
+    [Fact]
     public async Task StartAsync_WithAuthenticationDisabledAndWeakServiceScheme_ThrowsOptionsValidation()
     {
         var start = () => JwtDefaultsHost.StartAsync(
-            new Dictionary<string, string?>(),
+            new Dictionary<string, string?>(StringComparer.Ordinal),
             services: services => JwtFloorTests.AddSecondScheme(services, validateIssuer: false),
             authenticationEnabled: false);
 
@@ -162,6 +240,12 @@ public class JwtExtensionPointTests
 
     private static void PostConfigureBearer(IServiceCollection services, Action<JwtBearerOptions> configure) =>
         services.PostConfigure(JwtBearerDefaults.AuthenticationScheme, configure);
+
+    private static Task ForgeTokenAsync(MessageReceivedContext context)
+    {
+        context.Token = "forged";
+        return Task.CompletedTask;
+    }
 
     private sealed class ServiceEvents : JwtBearerEvents
     {

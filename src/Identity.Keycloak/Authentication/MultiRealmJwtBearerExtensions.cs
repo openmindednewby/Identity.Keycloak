@@ -183,7 +183,7 @@ public static class MultiRealmJwtBearerExtensions
                 AutomaticRefreshInterval = DefaultRefreshInterval,
             };
 
-            configs.Add(new RealmConfig(realm, issuer, configManager));
+            configs.Add(new RealmConfig(realm, issuer, KeycloakOwnedValidators.Mark(configManager)));
         }
         return configs;
     }

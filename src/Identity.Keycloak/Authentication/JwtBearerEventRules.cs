@@ -37,6 +37,12 @@ internal static class JwtBearerEventRules
         }
     }
 
-    private static bool IsSameHandler(PropertyInfo property, JwtBearerEvents events, JwtBearerEvents defaults) =>
-        ((Delegate?)property.GetValue(events))?.Method == ((Delegate?)property.GetValue(defaults))?.Method;
+    private static bool IsSameHandler(PropertyInfo property, JwtBearerEvents events, JwtBearerEvents defaults)
+    {
+        var handler = (Delegate?)property.GetValue(events);
+        var packageHandler = (Delegate?)property.GetValue(defaults);
+        return handler is null
+            ? packageHandler is null
+            : handler.GetInvocationList().Length == 1 && ReferenceEquals(handler, packageHandler);
+    }
 }

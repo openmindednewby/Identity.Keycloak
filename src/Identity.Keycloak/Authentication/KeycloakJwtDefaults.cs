@@ -85,6 +85,7 @@ public static class KeycloakJwtDefaults
         var authority = configuration[AuthorityKey];
         var audience = configuration[AudienceKey];
         var requireHttpsMetadata = configuration.GetValue(RequireHttpsMetadataKey, true);
+        KeycloakOwnedValidators.Mark(options);
         options.MapInboundClaims = false;
         options.ConfigureMultiRealm(KeycloakClaimsHelper.DeriveServerUrl(authority)!, RealmsOf(configuration), requireHttpsMetadata, backchannel);
         options.Audience = audience;

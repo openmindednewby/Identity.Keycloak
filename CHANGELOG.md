@@ -7,6 +7,15 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.12.3] - 2026-11-21
+
+### Security
+- An event handler counts as the package default only when it is that exact delegate with one invocation, so a forged
+  handler combined in front of the package one (`Forge + events.OnMessageReceived`) fails startup.
+- `AllowQueryStringToken` rejects "/" and empty prefixes; each prefix names at least one path segment.
+- Any JwtBearerOptions.ConfigurationManager not created by this package fails startup, and the package-configured scheme
+  must keep the package IssuerSigningKeyResolver.
+
 ## [1.12.2] - 2026-11-21
 
 ### Security
