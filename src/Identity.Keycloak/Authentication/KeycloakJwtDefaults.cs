@@ -20,6 +20,12 @@ public static class KeycloakJwtDefaults
 
     internal const string AllowedRealmsKey = "Authentication:AllowedRealms";
 
+    internal const string PlatformRealmKey = "Authentication:PlatformRealm";
+
+    internal const string PrivilegedRolesKey = "Authentication:PrivilegedRoles";
+
+    internal const string IdentityAuthenticationType = "Keycloak.JwtBearer";
+
     internal static readonly TimeSpan MaxClockSkew = TimeSpan.FromSeconds(30);
 
     internal static readonly string[] AllowedAlgorithms = [SecurityAlgorithms.RsaSha256, SecurityAlgorithms.EcdsaSha256];
@@ -57,6 +63,7 @@ public static class KeycloakJwtDefaults
             .Configure<ILoggerFactory>((options, loggerFactory) =>
                 ConfigureJwtBearer(options, configuration, BackchannelFor(configuration, environment, loggerFactory)))
             .ValidateOnStart();
+        services.AddOptions<KeycloakRoleMappingOptions>().Configure(options => ConfigureRoleMapping(options, configuration));
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IClaimsTransformation, KeycloakRealmRoleClaimsTransformation>());
         AddFloor(services);
         return authentication;
@@ -98,6 +105,18 @@ public static class KeycloakJwtDefaults
         parameters.RequireExpirationTime = true;
         parameters.ClockSkew = MaxClockSkew;
         parameters.ValidAlgorithms = AllowedAlgorithms;
+        parameters.AuthenticationType = IdentityAuthenticationType;
+    }
+
+    private static void ConfigureRoleMapping(KeycloakRoleMappingOptions options, IConfiguration configuration)
+    {
+        options.AllowedRealms = RealmsOf(configuration);
+        options.PlatformRealm = configuration[PlatformRealmKey];
+        var privilegedRoles = configuration.GetSection(PrivilegedRolesKey).Get<string[]>();
+        if (privilegedRoles is { Length: > 0 })
+        {
+            options.PrivilegedRoles = privilegedRoles;
+        }
     }
 
     private static string[] RealmsOf(IConfiguration configuration) =>

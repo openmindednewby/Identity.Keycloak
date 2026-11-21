@@ -18,6 +18,10 @@ internal sealed class JwtDefaultsHost : IAsyncDisposable
 
     public const string RolesPath = "/roles";
 
+    public const string PlatformPath = "/platform";
+
+    public const string PlatformRole = "platform-admin";
+
     private readonly WebApplication _app;
 
     private JwtDefaultsHost(WebApplication app, HttpClient client, CapturingLoggerProvider logs)
@@ -53,6 +57,7 @@ internal sealed class JwtDefaultsHost : IAsyncDisposable
         app.UseAuthorization();
         app.MapGet(SecurePath, () => "secret");
         app.MapGet(RolesPath, (ClaimsPrincipal user) => user.FindAll(ClaimTypes.Role).Select(claim => claim.Value).ToArray());
+        app.MapGet(PlatformPath, () => "platform").RequireAuthorization(policy => policy.RequireRole(PlatformRole));
         await app.StartAsync();
 
         var address = app.Services.GetRequiredService<IServer>().Features

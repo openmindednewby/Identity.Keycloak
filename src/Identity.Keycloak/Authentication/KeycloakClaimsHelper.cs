@@ -10,9 +10,14 @@ public static class KeycloakClaimsHelper
     /// <summary>Adds a role claim per realm_access.roles entry of the validated principal.</summary>
     public static void MapKeycloakRoleClaims(TokenValidatedContext context)
     {
-        if (context.Principal is not null)
+        if (context.Principal?.Identity is not ClaimsIdentity identity)
         {
-            AddRealmRoleClaims(context.Principal);
+            return;
+        }
+
+        foreach (var role in RealmRolesOf(identity).Where(role => !identity.HasClaim(ClaimTypes.Role, role)))
+        {
+            identity.AddClaim(new Claim(ClaimTypes.Role, role));
         }
     }
 
@@ -27,34 +32,30 @@ public static class KeycloakClaimsHelper
         return idx > 0 ? authority.Substring(0, idx) : authority.TrimEnd('/');
     }
 
-    internal static void AddRealmRoleClaims(ClaimsPrincipal principal)
+    internal static IReadOnlyList<string> RealmRolesOf(ClaimsIdentity identity)
     {
-        if (principal.Identity is not ClaimsIdentity identity)
-        {
-            return;
-        }
-
-        var realmAccessClaim = principal.FindFirst("realm_access");
+        var realmAccessClaim = identity.FindFirst("realm_access");
         if (realmAccessClaim is null)
         {
-            return;
+            return [];
         }
 
-        using var realmAccess = JsonDocument.Parse(realmAccessClaim.Value);
-        if (!realmAccess.RootElement.TryGetProperty("roles", out var roles)
-            || roles.ValueKind != JsonValueKind.Array)
+        try
         {
-            return;
+            using var realmAccess = JsonDocument.Parse(realmAccessClaim.Value);
+            return realmAccess.RootElement.ValueKind == JsonValueKind.Object
+                && realmAccess.RootElement.TryGetProperty("roles", out var roles)
+                && roles.ValueKind == JsonValueKind.Array
+                ? roles.EnumerateArray()
+                    .Where(role => role.ValueKind == JsonValueKind.String)
+                    .Select(role => role.GetString()!)
+                    .Where(role => !string.IsNullOrWhiteSpace(role))
+                    .ToList()
+                : [];
         }
-
-        foreach (var role in roles.EnumerateArray())
+        catch (JsonException)
         {
-            var roleValue = role.GetString();
-            if (!string.IsNullOrWhiteSpace(roleValue)
-                && !identity.HasClaim(ClaimTypes.Role, roleValue))
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
-            }
+            return [];
         }
     }
 }

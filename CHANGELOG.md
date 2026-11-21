@@ -7,6 +7,16 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.13.1] - 2026-11-21
+
+### Security
+- Cross-realm role confusion: the realm-role transformation maps roles only on the identity the Keycloak JWT scheme
+  issued (`AuthenticationType` `Keycloak.JwtBearer`) whose `iss` realm is in `Authentication:AllowedRealms`, reading
+  `realm_access` from that identity. Privileged roles (`Authentication:PrivilegedRoles`, default `superUser`) become role
+  claims only from `Authentication:PlatformRealm`; from any other realm they are dropped, including role claims already on
+  the token. Unset `PlatformRealm` grants no privileged role. Malformed `realm_access` gives no roles instead of a 500.
+- `KeycloakRealmRoleClaimsTransformation` and `KeycloakRoleMappingOptions` are public.
+
 ## [1.13.0] - 2026-11-21
 
 ### Added
