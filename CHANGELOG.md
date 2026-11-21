@@ -7,6 +7,14 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.12.1] - 2026-11-21
+
+### Security
+- The JWT floor is an allowlist: every delegate-typed property of TokenValidationParameters (found by reflection, the
+  UsingConfiguration variants and IssuerSigningKeyResolver included) must be null or set by this package; TokenHandlers must
+  be the default JsonWebTokenHandler; a service-set OnAuthenticationFailed (or events type overriding it) fails startup.
+- With authentication switched off, the floor validator and startup check still run, so a service's own AddJwtBearer gets the floor.
+
 ## [1.12.0] - 2026-11-21
 
 ### Added

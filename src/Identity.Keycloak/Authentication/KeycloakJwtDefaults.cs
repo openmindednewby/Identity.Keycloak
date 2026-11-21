@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -56,8 +57,7 @@ public static class KeycloakJwtDefaults
             .Configure<ILoggerFactory>((options, loggerFactory) =>
                 ConfigureJwtBearer(options, configuration, BackchannelFor(configuration, environment, loggerFactory)))
             .ValidateOnStart();
-        services.AddSingleton<IValidateOptions<JwtBearerOptions>, JwtBearerFloorValidator>();
-        services.AddHostedService<JwtBearerSchemesStartupCheck>();
+        AddFloor(services);
         return authentication;
     }
 
@@ -69,8 +69,15 @@ public static class KeycloakJwtDefaults
                 $"{AuthorityKey} is required; a service without authentication must switch authentication off with a reason.");
         }
 
+        AddFloor(services);
         return services.AddAuthentication(NoAuthenticationHandler.SchemeName)
             .AddScheme<AuthenticationSchemeOptions, NoAuthenticationHandler>(NoAuthenticationHandler.SchemeName, _ => { });
+    }
+
+    private static void AddFloor(IServiceCollection services)
+    {
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<JwtBearerOptions>, JwtBearerFloorValidator>());
+        services.AddHostedService<JwtBearerSchemesStartupCheck>();
     }
 
     private static void ConfigureJwtBearer(JwtBearerOptions options, IConfiguration configuration, HttpClient? backchannel)

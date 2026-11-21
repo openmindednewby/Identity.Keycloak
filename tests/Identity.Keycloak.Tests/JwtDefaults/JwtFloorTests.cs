@@ -80,7 +80,7 @@ public class JwtFloorTests
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    private static void AddSecondScheme(IServiceCollection services, bool validateIssuer) =>
+    internal static void AddSecondScheme(IServiceCollection services, bool validateIssuer) =>
         services.AddAuthentication().AddJwtBearer(SecondScheme, options =>
         {
             var parameters = options.TokenValidationParameters;
