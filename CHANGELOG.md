@@ -7,6 +7,20 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.12.0] - 2026-11-21
+
+### Added
+- `services.AddKeycloakJwtDefaults(configuration, environment, authenticationEnabled)` (SVCDEF-1 item 8 "the composition has no
+  behaviour of its own"): binds `Jwt:Authority`, `Jwt:Audience`, `Jwt:RequireHttpsMetadata` and `Authentication:AllowedRealms`,
+  moved from Dloizides.ServiceDefaults. Without `Jwt:Authority` it throws unless `authenticationEnabled` is false, which
+  registers a scheme that authenticates no one.
+
+### Security
+- The JWT floor (ValidateIssuer/Audience/Lifetime/IssuerSigningKey, RequireSignedTokens, ClockSkew <= 30 s, RS256/ES256 only)
+  now applies to EVERY JwtBearer scheme and is checked at startup, not only `Bearer`.
+- Startup fails when SignatureValidator, IssuerSigningKeyValidator, LifetimeValidator or IssuerValidator (and their
+  UsingConfiguration twins) is set by anything other than this package; `ConfigureMultiRealm`'s IssuerValidator stays allowed.
+
 ## [1.11.1] - 2026-11-16
 
 ### Fixed

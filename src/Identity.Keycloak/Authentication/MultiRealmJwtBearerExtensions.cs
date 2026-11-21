@@ -97,7 +97,7 @@ public static class MultiRealmJwtBearerExtensions
         options.TokenValidationParameters.ValidIssuers = validIssuers;
         options.TokenValidationParameters.ValidateIssuerSigningKey = true;
         options.TokenValidationParameters.ValidateLifetime = true;
-        options.TokenValidationParameters.IssuerValidator = MakeIssuerValidator(realmConfigs);
+        options.TokenValidationParameters.IssuerValidator = KeycloakOwnedValidators.Mark(MakeIssuerValidator(realmConfigs));
         options.TokenValidationParameters.IssuerSigningKeyResolver = MakeIssuerSigningKeyResolver(realmConfigs);
     }
 

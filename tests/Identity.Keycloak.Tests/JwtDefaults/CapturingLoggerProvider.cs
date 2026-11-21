@@ -1,0 +1,33 @@
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
+
+namespace Identity.Keycloak.Tests.JwtDefaults;
+
+internal sealed class CapturingLoggerProvider : ILoggerProvider
+{
+    public ConcurrentQueue<string> Messages { get; } = new();
+
+    public ILogger CreateLogger(string categoryName) => new CapturingLogger(Messages);
+
+    public void Dispose()
+    {
+    }
+
+    private sealed class CapturingLogger : ILogger
+    {
+        private readonly ConcurrentQueue<string> _messages;
+
+        public CapturingLogger(ConcurrentQueue<string> messages)
+        {
+            _messages = messages;
+        }
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            _messages.Enqueue(formatter(state, exception));
+    }
+}
