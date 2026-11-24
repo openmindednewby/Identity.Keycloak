@@ -56,7 +56,7 @@ public static class RealmAuthorizationExtensions
         if (enableSuperUser)
         {
             builder.Services.AddOptions<KeycloakRoleMappingOptions>()
-                .Configure(options => KeycloakJwtDefaults.ConfigurePrivilegedRoles(options, builder.Configuration));
+                .Configure(options => KeycloakJwtDefaults.ConfigurePrivilegedRoles(options, KeycloakPrivilegedRoleOptions.From(builder.Configuration)));
             builder.Services.AddSingleton<IAuthorizationHandler, SuperUserAuthorizationHandler>();
             builder.Services.AddSingleton<IAuthorizationHandler, SuperUserFallbackHandler>();
         }

@@ -20,10 +20,6 @@ public static class KeycloakJwtDefaults
 
     internal const string AllowedRealmsKey = "Authentication:AllowedRealms";
 
-    internal const string PlatformRealmKey = "Authentication:PlatformRealm";
-
-    internal const string PrivilegedRolesKey = "Authentication:PrivilegedRoles";
-
     internal const string IdentityAuthenticationType = "Keycloak.JwtBearer";
 
     internal static readonly TimeSpan MaxClockSkew = TimeSpan.FromSeconds(30);
@@ -69,10 +65,10 @@ public static class KeycloakJwtDefaults
         return authentication;
     }
 
-    internal static void ConfigurePrivilegedRoles(KeycloakRoleMappingOptions options, IConfiguration configuration)
+    internal static void ConfigurePrivilegedRoles(KeycloakRoleMappingOptions options, KeycloakPrivilegedRoleOptions source)
     {
-        options.PlatformRealm = configuration[PlatformRealmKey];
-        var privilegedRoles = configuration.GetSection(PrivilegedRolesKey).Get<string[]>();
+        options.PlatformRealm = source.PlatformRealm;
+        var privilegedRoles = source.PrivilegedRoles;
         if (privilegedRoles is { Length: > 0 })
         {
             options.PrivilegedRoles = privilegedRoles;
@@ -121,7 +117,7 @@ public static class KeycloakJwtDefaults
     private static void ConfigureRoleMapping(KeycloakRoleMappingOptions options, IConfiguration configuration)
     {
         options.AllowedRealms = RealmsOf(configuration);
-        ConfigurePrivilegedRoles(options, configuration);
+        ConfigurePrivilegedRoles(options, KeycloakPrivilegedRoleOptions.From(configuration));
     }
 
     private static string[] RealmsOf(IConfiguration configuration) =>
@@ -135,8 +131,9 @@ public static class KeycloakJwtDefaults
         }
 
         var logger = loggerFactory.CreateLogger(nameof(KeycloakJwtDefaults));
-        return KeycloakHttpClientExtensions.LogAndCheckCertValidationFlag(configuration, logger)
-            ? KeycloakHttpClientExtensions.CreateBackchannelHttpClient(configuration)
+        var httpOptions = KeycloakHttpOptions.From(configuration);
+        return KeycloakHttpClientExtensions.LogAndCheckCertValidationFlag(httpOptions, logger)
+            ? KeycloakHttpClientExtensions.CreateBackchannelHttpClient(httpOptions)
             : null;
     }
 }

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 namespace Identity.Keycloak.Authentication;
 
 /// <summary>
@@ -51,4 +53,10 @@ public sealed class KeycloakHttpOptions
     /// <see langword="false"/>, not to flip this flag.
     /// </summary>
     public bool AllowSkipCertValidationInProduction { get; set; }
+
+    public string? ServerUrl { get; set; }
+
+    /// <summary>Binds the <c>Keycloak</c> section; an absent section gives full certificate validation.</summary>
+    public static KeycloakHttpOptions From(IConfiguration configuration) =>
+        configuration.GetSection(SectionName).Get<KeycloakHttpOptions>() ?? new KeycloakHttpOptions();
 }

@@ -49,8 +49,7 @@ public static class KeycloakHttpClientExtensions
         IConfiguration configuration)
         where TClient : class
     {
-        var options = ReadKeycloakHttpOptions(configuration);
-        var skipCertValidation = ShouldSkipCertValidation(options, configuration);
+        var skipCertValidation = ShouldSkipCertValidation(KeycloakHttpOptions.From(configuration));
 
         return services
             .AddHttpClient<TClient>()
@@ -64,8 +63,7 @@ public static class KeycloakHttpClientExtensions
         where TClient : class
         where TImplementation : class, TClient
     {
-        var options = ReadKeycloakHttpOptions(configuration);
-        var skipCertValidation = ShouldSkipCertValidation(options, configuration);
+        var skipCertValidation = ShouldSkipCertValidation(KeycloakHttpOptions.From(configuration));
 
         return services
             .AddHttpClient<TClient, TImplementation>()
@@ -81,12 +79,15 @@ public static class KeycloakHttpClientExtensions
         "Dloizides.Patterns",
         "DLZ0006",
         Justification = "One boot-time client for JwtBearerOptions.Backchannel, built before the DI container exists; public API used by zygos Finreg.Web Program.cs")]
-    public static HttpClient CreateBackchannelHttpClient(IConfiguration configuration)
-    {
-        var options = ReadKeycloakHttpOptions(configuration);
-        var skipCertValidation = ShouldSkipCertValidation(options, configuration);
-        return new HttpClient(CreateHandler(skipCertValidation), disposeHandler: true);
-    }
+    public static HttpClient CreateBackchannelHttpClient(IConfiguration configuration) =>
+        CreateBackchannelHttpClient(KeycloakHttpOptions.From(configuration));
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Dloizides.Patterns",
+        "DLZ0006",
+        Justification = "One boot-time client for JwtBearerOptions.Backchannel, built before the DI container exists; public API used by zygos Finreg.Web Program.cs")]
+    public static HttpClient CreateBackchannelHttpClient(KeycloakHttpOptions options) =>
+        new(CreateHandler(ShouldSkipCertValidation(options)), disposeHandler: true);
 
     /// <summary>
     /// Emits a loud startup warning when <c>SkipCertValidation=true</c> and throws
@@ -95,15 +96,21 @@ public static class KeycloakHttpClientExtensions
     /// </summary>
     public static bool LogAndCheckCertValidationFlag(
         IConfiguration configuration,
+        ILogger logger) =>
+        LogAndCheckCertValidationFlag(KeycloakHttpOptions.From(configuration), logger);
+
+    /// <summary>Runs the cert-skip startup guard on already bound Keycloak HTTP options; returns the effective flag.</summary>
+    public static bool LogAndCheckCertValidationFlag(
+        KeycloakHttpOptions options,
         ILogger logger)
     {
-        var options = ReadKeycloakHttpOptions(configuration);
+        ArgumentNullException.ThrowIfNull(options);
         if (!options.SkipCertValidation)
         {
             return false;
         }
 
-        var serverUrl = configuration["Keycloak:ServerUrl"];
+        var serverUrl = options.ServerUrl;
         var looksLikeProduction = LooksLikeProductionHost(serverUrl);
         if (looksLikeProduction && !options.AllowSkipCertValidationInProduction)
         {
@@ -130,24 +137,14 @@ public static class KeycloakHttpClientExtensions
         return true;
     }
 
-    private static KeycloakHttpOptions ReadKeycloakHttpOptions(IConfiguration configuration)
-    {
-        var options = new KeycloakHttpOptions();
-        configuration.GetSection(KeycloakHttpOptions.SectionName).Bind(options);
-        return options;
-    }
-
-    private static bool ShouldSkipCertValidation(
-        KeycloakHttpOptions options,
-        IConfiguration configuration)
+    private static bool ShouldSkipCertValidation(KeycloakHttpOptions options)
     {
         if (!options.SkipCertValidation)
         {
             return false;
         }
 
-        var serverUrl = configuration["Keycloak:ServerUrl"];
-        if (LooksLikeProductionHost(serverUrl)
+        if (LooksLikeProductionHost(options.ServerUrl)
             && !options.AllowSkipCertValidationInProduction)
         {
             // The startup guard (LogAndCheckCertValidationFlag) will throw on boot —

@@ -7,6 +7,15 @@ All notable changes to this package.
 > NuGet drift backlog (Wave 2b), where a *missing* changelog on a sibling package was the
 > thing that blocked an upgrade for a full session.
 
+## [1.14.0] - 2026-11-24
+
+### Changed
+- STATIC-PURE-1 (DLZ0026) options pattern: static helpers no longer read `IConfiguration`. `KeycloakHttpOptions` gains
+  `ServerUrl` (from `Keycloak:ServerUrl`) and `From(IConfiguration)`; new `KeycloakPrivilegedRoleOptions` binds
+  `Authentication:PlatformRealm` / `Authentication:PrivilegedRoles`. New overloads `CreateBackchannelHttpClient(KeycloakHttpOptions)`
+  and `LogAndCheckCertValidationFlag(KeycloakHttpOptions, ILogger)`; the `IConfiguration` overloads bind and forward, keys and
+  defaults unchanged.
+
 ## [1.13.2] - 2026-11-21
 
 ### Security
